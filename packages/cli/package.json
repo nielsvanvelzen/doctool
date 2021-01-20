@@ -4,10 +4,15 @@
 	"bin": {
 		"doctool": "bin/doctool.js"
 	},
+	"files": [
+		"lib",
+		"bin"
+	],
 	"scripts": {
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
+		"@doctool/core": "0.0.1-dev",
 		"cac": "^6.7.1"
 	}
 }

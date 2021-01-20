@@ -8,6 +8,6 @@
 		"watch": "doctool watch"
 	},
 	"devDependencies": {
-		"@doctool/cli": "file:../../packages/cli"
+		"@doctool/cli": "0.0.1-dev"
 	}
 }

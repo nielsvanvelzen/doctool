@@ -4,6 +4,9 @@
 		"moduleResolution": "node",
 		"strict": true,
 		"strictNullChecks": true,
-		"target": "ES5"
+		"target": "ES5",
+		"esModuleInterop": true,
+		"sourceMap": true,
+		"declaration": true
 	}
 }

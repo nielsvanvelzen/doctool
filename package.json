@@ -1,0 +1,19 @@
+{
+	"name": "doctool",
+	"private": true,
+	"workspaces": [
+		"packages/*",
+		"examples/*"
+	],
+	"scripts": {
+		"build": "lerna run build"
+	},
+	"engines": {
+		"node": "^14.*.*"
+	},
+	"devDependencies": {
+		"@types/node": "^14.14.22",
+		"lerna": "^3.22.1",
+		"typescript": "^3.4.3"
+	}
+}

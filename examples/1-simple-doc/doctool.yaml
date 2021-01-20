@@ -1,0 +1,25 @@
+directories:
+  content: content/
+  template: template/
+  cache: .cache/
+  dist: dist/
+
+plugins:
+  - "@doctool/template-handlebars"
+  - "@doctool/content-marked"
+  - "@doctool/renderer-weasyprint"
+  - "@doctool/template-toc"
+
+documents:
+  simple-doc:
+    type: weasyprint
+    file: 'simple-doc-weasyprint.pdf'
+    document:
+      - template: cover
+        data:
+          title: Simple document
+          author: Doctool developers
+      - template: doctool:toc
+      - template: page
+        data:
+          content: hello-world

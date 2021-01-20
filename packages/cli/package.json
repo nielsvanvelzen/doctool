@@ -1,0 +1,13 @@
+{
+	"name": "@doctool/cli",
+	"version": "0.0.1-dev",
+	"bin": {
+		"doctool": "bin/doctool.js"
+	},
+	"scripts": {
+		"build": "tsc -b tsconfig.json"
+	},
+	"dependencies": {
+		"cac": "^6.7.1"
+	}
+}

@@ -1,0 +1,13 @@
+{
+	"name": "@doctool/simple-doc",
+	"version": "0.0.1-dev",
+	"private": true,
+	"scripts": {
+		"start": "yarn run watch",
+		"build": "doctool build",
+		"watch": "doctool watch"
+	},
+	"devDependencies": {
+		"@doctool/cli": "file:../../packages/cli"
+	}
+}

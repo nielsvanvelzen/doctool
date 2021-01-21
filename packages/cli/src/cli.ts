@@ -1,25 +1,41 @@
 import { cac } from 'cac';
-import { readConfig } from '@doctool/core';
+import { readConfig, buildDocuments, getRelevantFiles } from '@doctool/core';
 import * as path from 'path';
+
 interface Options {
 	config: string
 }
 
-interface WatchOptions extends Options {}
-interface BuildOptions extends Options {}
+interface WatchOptions extends Options { }
+interface BuildOptions extends Options { }
 
-async function watch(directory: string, options: WatchOptions) {
-	console.error('Watch command is not implemented. Running build instead.');
-	await build(directory, options);
+async function watch(workingDirectory: string, options: WatchOptions): Promise<void> {
+	try {
+		const configLocation = path.resolve(workingDirectory, options.config);
+		const config = await readConfig(workingDirectory, configLocation);
+		const files = await getRelevantFiles(config);
+
+		console.log(files);
+		await buildDocuments(config);
+	} catch (err) {
+		console.error(err);
+		process.exit(1);
+	}
 }
 
-async function build(directory: string, options: BuildOptions) {
-	console.log('directory', directory);
-	console.log('options', options);
+async function build(workingDirectory: string, options: BuildOptions): Promise<void> {
+	try {
+		const configLocation = path.resolve(workingDirectory, options.config);
+		const config = await readConfig(workingDirectory, configLocation);
+		// const files = await getRelevantFiles(config);
 
-	const configLocation = path.resolve(directory, options.config);
-	const config = await readConfig(configLocation);
-	console.log(config);
+		// console.log(config);
+		// console.log(files);
+		await buildDocuments(config);
+	} catch (err) {
+		console.error(err);
+		process.exit(1);
+	}
 }
 
 export const cli = (): void => {
@@ -39,7 +55,6 @@ export const cli = (): void => {
 		.command('build [directory]', 'Build documents', {})
 		.option('-c, --config <config>', 'Set path to configuration file', { default: 'doctool.yaml' })
 		.action((directory, options) => build(directory || process.cwd(), options));
-  
+
 	program.parse(process.argv);
 }
-  

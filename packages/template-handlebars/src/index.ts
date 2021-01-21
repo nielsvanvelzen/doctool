@@ -4,7 +4,8 @@ import handlebars from 'handlebars';
 export class HandlebarsTemplateProvider implements TemplateProvider {
 	render<T extends object>(location: string, source: Buffer, data: T): Promise<Buffer> {
 		const template = handlebars.compile(source.toString());
-		const buffer = Buffer.from(template(data), 'utf-8');
+		const options: handlebars.RuntimeOptions = {};
+		const buffer = Buffer.from(template(data, options), 'utf-8');
 
 		return Promise.resolve(buffer);
 	}

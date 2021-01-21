@@ -1,0 +1,19 @@
+{
+	"name": "@doctool/template-nunjucks",
+	"version": "0.0.1-dev",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"files": [
+		"lib"
+	],
+	"scripts": {
+		"build": "tsc -b tsconfig.json"
+	},
+	"dependencies": {
+		"@doctool/plugin-api": "0.0.1-dev",
+		"nunjucks": "^3.2.2"
+	},
+	"devDependencies": {
+		"@types/nunjucks": "^3.1.3"
+	}
+}

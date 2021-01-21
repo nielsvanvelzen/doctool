@@ -1,5 +1,5 @@
 plugins:
-  - "@doctool/template-handlebars"
+  - "@doctool/template-nunjucks"
   # - "@doctool/content-marked"
   # - "@doctool/renderer-weasyprint"
   # - "@doctool/template-toc"
@@ -9,11 +9,11 @@ documents:
     type: weasyprint
     file: 'simple-doc-weasyprint.pdf'
     document:
-      - template: cover.hbs
+      - template: cover.njk
         data:
           title: Simple document
           author: Doctool developers
-      # - template: doctool:toc.hbs
-      - template: page.hbs
+      # - template: doctool:toc.njk
+      - template: page.njk
         data:
           content: hello-world

@@ -102,7 +102,10 @@ export async function buildDocument(config: Config, documentConfig: Document) {
 	}));
 
 	const rendered = await renderPrinter(config, documentConfig.printer, sources);
-	console.log(rendered.toString());
+	const documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
+	
+	await fs.mkdir(path.dirname(documentPath), { recursive: true });
+	await fs.writeFile(documentPath, rendered);
 }
 
 const loadedPlugins: string[] = [];

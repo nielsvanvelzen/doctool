@@ -19,6 +19,7 @@ export class NunjucksTemplateProvider implements TemplateProvider {
 		return Buffer.from(result, 'utf-8');
 	}
 }
+
 export default async function(): Promise<PluginValues> {
 	return {
 		templateProviders: {

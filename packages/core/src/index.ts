@@ -2,7 +2,7 @@ import deepmerge from 'deepmerge';
 import fs from 'fs/promises';
 import yaml from 'js-yaml';
 import path from 'path';
-import { PluginValues, TemplateProvider, TemplateRenderContext, ContentProvider, ContentRenderContext } from '@doctool/plugin-api';
+import { PluginValues, TemplateProvider, TemplateRenderContext, ContentProvider, ContentRenderContext, PrinterSource, PrinterProvider } from '@doctool/plugin-api';
 import { Config, Document, DocumentPartData } from './config/config';
 import { defaultConfig } from './config/default';
 
@@ -37,6 +37,8 @@ export async function getRelevantFiles(config: Config) {
 }
 
 export async function buildDocuments(config: Config) {
+	await validatePlugins(config);
+
 	for (const [document, documentConfig] of Object.entries(config.documents)) {
 		console.info(`Building ${document}`);
 
@@ -50,7 +52,7 @@ async function renderTemplate(config: Config, name: string, data: DocumentPartDa
 
 	if (!extension) throw new Error(`Could not find an extension for template at ${templatePath}`);
 	const provider = await getTemplateProvider(config, extension);
-	if (!provider) throw new Error(`No provider found for ${extension}`);
+	if (!provider) throw new Error(`No template provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
 	const context: TemplateRenderContext = {
@@ -67,7 +69,7 @@ async function renderContent(config: Config, name: string, data: DocumentPartDat
 
 	if (!extension) throw new Error(`Could not find an extension for content at ${contentPath}`);
 	const provider = await getContentProvider(config, extension);
-	if (!provider) throw new Error(`No provider found for ${extension}`);
+	if (!provider) throw new Error(`No content provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
 	const context: ContentRenderContext = {
@@ -78,24 +80,40 @@ async function renderContent(config: Config, name: string, data: DocumentPartDat
 	return rendered;
 }
 
-export async function buildDocument(config: Config, documentConfig: Document) {
-	// TODO get renderer
+async function renderPrinter(config: Config, name: string, sources: PrinterSource[]): Promise<Buffer> {
+	const provider = await getPrinterProvider(config, name);
+	if (!provider) throw new Error(`No printer provider found for ${name}`);
 
-	for (const part of documentConfig.document) {
-		const rendered = await renderTemplate(config, part.template, part.data);
-		console.log(rendered.toString());
-	}
+	// TODO Custom context? don't need render functions right?
+	const context: ContentRenderContext = {
+		renderContent: (name) => renderContent(config, name, {}),
+		renderTemplate: (name: string) => renderTemplate(config, name, {})
+	};
+	const rendered = provider.render(context, sources);
+	return rendered;
+}
+
+export async function buildDocument(config: Config, documentConfig: Document) {
+	const sources: PrinterSource[] = await Promise.all(documentConfig.document.map(async part => {
+		return {
+			name: part.template,
+			content: await renderTemplate(config, part.template, part.with)
+		};
+	}));
+
+	const rendered = await renderPrinter(config, documentConfig.printer, sources);
+	console.log(rendered.toString());
 }
 
 const loadedPlugins: string[] = [];
 const providers: {
 	template: { [key: string]: TemplateProvider },
 	content: { [key: string]: ContentProvider },
-	renderer: { [key: string]: TemplateProvider }
+	printer: { [key: string]: PrinterProvider }
 } = {
 	template: {},
 	content: {},
-	renderer: {}
+	printer: {}
 };
 
 async function validatePlugins(config: Config): Promise<void> {
@@ -107,15 +125,15 @@ async function validatePlugins(config: Config): Promise<void> {
 }
 
 export async function getTemplateProvider<T extends TemplateProvider>(config: Config, provider: string): Promise<T | null> {
-	await validatePlugins(config);
-
 	return providers.template[provider] as T || null;
 }
 
 export async function getContentProvider<T extends ContentProvider>(config: Config, provider: string): Promise<T | null> {
-	await validatePlugins(config);
-
 	return providers.content[provider] as T || null;
+}
+
+export async function getPrinterProvider<T extends PrinterProvider>(config: Config, provider: string): Promise<T | null> {
+	return providers.printer[provider] as T || null;
 }
 
 export async function loadPlugin(config: Config, id: string) {
@@ -144,6 +162,10 @@ export async function loadPlugin(config: Config, id: string) {
 
 	Object.entries(values.contentProviders || {}).forEach(([extension, provider]) => {
 		providers.content[extension] = provider;
+	});
+
+	Object.entries(values.printerProviders || {}).forEach(([name, provider]) => {
+		providers.printer[name] = provider;
 	});
 
 	loadedPlugins.push(id);

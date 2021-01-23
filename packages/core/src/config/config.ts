@@ -1,12 +1,12 @@
 export interface DocumentPartData { }
 export interface DocumentPart<T extends DocumentPartData> {
 	template: string,
-	data: T
+	with: T
 }
 
 export type Document = {
-	type: string,
 	file: string,
+	printer: string,
 	document: DocumentPart<any>[]
 };
 

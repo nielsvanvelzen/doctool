@@ -1,5 +1,4 @@
 import { PluginValues, ContentProvider, ContentRenderContext } from '@doctool/plugin-api';
-import { rejects } from 'assert';
 import marked from 'marked';
 
 export class MarkedContentProvider implements ContentProvider {
@@ -9,12 +8,13 @@ export class MarkedContentProvider implements ContentProvider {
 		};
 
 		const result: string = await new Promise((resolve, reject) => {
-			marked(source.toString(), options, (error, result) => error ? rejects(error) : resolve(result));
+			marked(source.toString(), options, (error, result) => error ? reject(error) : resolve(result));
 		});
 
 		return Buffer.from(result, 'utf-8');
 	}
 }
+
 export default async function(): Promise<PluginValues> {
 	return {
 		contentProviders: {

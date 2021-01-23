@@ -1,0 +1,19 @@
+{
+	"name": "@doctool/printer-html",
+	"version": "0.0.1-dev",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"files": [
+		"lib"
+	],
+	"scripts": {
+		"build": "tsc -b tsconfig.json"
+	},
+	"dependencies": {
+		"@doctool/plugin-api": "0.0.1-dev",
+		"prettier": "^2.2.1"
+	},
+	"devDependencies": {
+		"@types/prettier": "^2.1.6"
+	}
+}

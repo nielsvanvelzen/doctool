@@ -10,6 +10,8 @@
 	"devDependencies": {
 		"@doctool/cli": "0.0.1-dev",
 		"@doctool/template-handlebars": "0.0.1-dev",
-		"@doctool/content-marked": "0.0.1-dev"
+		"@doctool/content-marked": "0.0.1-dev",
+		"@doctool/printer-html": "0.0.1-dev",
+		"@doctool/printer-weasyprint": "0.0.1-dev"
 	}
 }

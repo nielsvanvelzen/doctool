@@ -2,8 +2,8 @@ import deepmerge from 'deepmerge';
 import fs from 'fs/promises';
 import yaml from 'js-yaml';
 import path from 'path';
-import { TemplateProvider, PluginValues, Provider } from '@doctool/plugin-api';
-import { Config, Document } from './config/config';
+import { PluginValues, TemplateProvider, TemplateRenderContext, ContentProvider, ContentRenderContext } from '@doctool/plugin-api';
+import { Config, Document, DocumentPartData } from './config/config';
 import { defaultConfig } from './config/default';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
@@ -44,22 +44,45 @@ export async function buildDocuments(config: Config) {
 	}
 }
 
+async function renderTemplate(config: Config, name: string, data: DocumentPartData): Promise<Buffer> {
+	const templatePath = path.resolve(config.workingDirectory, config.directories.template, name);
+	const extension = path.extname(templatePath);
+
+	if (!extension) throw new Error(`Could not find an extension for template at ${templatePath}`);
+	const provider = await getTemplateProvider(config, extension);
+	if (!provider) throw new Error(`No provider found for ${extension}`);
+
+	// TODO add file-hashing magic and caching
+	const context: TemplateRenderContext = {
+		renderContent: (name) => renderContent(config, name, data),
+		renderTemplate: (name: string) => renderTemplate(config, name, data)
+	};
+	const rendered = await provider.render(context, templatePath, await fs.readFile(templatePath), data);
+	return rendered;
+}
+
+async function renderContent(config: Config, name: string, data: DocumentPartData): Promise<Buffer> { 
+	const contentPath = path.resolve(config.workingDirectory, config.directories.content, name);
+	const extension = path.extname(contentPath);
+
+	if (!extension) throw new Error(`Could not find an extension for content at ${contentPath}`);
+	const provider = await getContentProvider(config, extension);
+	if (!provider) throw new Error(`No provider found for ${extension}`);
+
+	// TODO add file-hashing magic and caching
+	const context: ContentRenderContext = {
+		renderContent: (name) => renderContent(config, name, data),
+		renderTemplate: (name: string) => renderTemplate(config, name, data)
+	};
+	const rendered = await provider.render(context, contentPath, await fs.readFile(contentPath), data);
+	return rendered;
+}
+
 export async function buildDocument(config: Config, documentConfig: Document) {
 	// TODO get renderer
 
 	for (const part of documentConfig.document) {
-		const templatePath = path.resolve(config.workingDirectory, config.directories.template, part.template);
-		const extension = path.extname(templatePath);
-
-		if (!extension) throw new Error(`Could not find an extension for template at ${templatePath}`);
-		const provider = await getTemplateProvider(config, extension);
-		if (!provider) throw new Error(`No provider found for ${extension}`);
-
-		// TODO add file-hashing magic and caching
-		const rendered = await provider.render(templatePath, await fs.readFile(templatePath), part.data);
-
-		// TODO get extension handler
-		console.log(templatePath);
+		const rendered = await renderTemplate(config, part.template, part.data);
 		console.log(rendered.toString());
 	}
 }
@@ -67,7 +90,7 @@ export async function buildDocument(config: Config, documentConfig: Document) {
 const loadedPlugins: string[] = [];
 const providers: {
 	template: { [key: string]: TemplateProvider },
-	content: { [key: string]: TemplateProvider },
+	content: { [key: string]: ContentProvider },
 	renderer: { [key: string]: TemplateProvider }
 } = {
 	template: {},
@@ -87,6 +110,12 @@ export async function getTemplateProvider<T extends TemplateProvider>(config: Co
 	await validatePlugins(config);
 
 	return providers.template[provider] as T || null;
+}
+
+export async function getContentProvider<T extends ContentProvider>(config: Config, provider: string): Promise<T | null> {
+	await validatePlugins(config);
+
+	return providers.content[provider] as T || null;
 }
 
 export async function loadPlugin(config: Config, id: string) {
@@ -111,6 +140,10 @@ export async function loadPlugin(config: Config, id: string) {
 
 	Object.entries(values.templateProviders || {}).forEach(([extension, provider]) => {
 		providers.template[extension] = provider;
+	});
+
+	Object.entries(values.contentProviders || {}).forEach(([extension, provider]) => {
+		providers.content[extension] = provider;
 	});
 
 	loadedPlugins.push(id);

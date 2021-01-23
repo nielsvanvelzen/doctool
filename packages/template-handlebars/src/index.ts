@@ -1,8 +1,8 @@
-import { TemplateProvider, PluginValues } from '@doctool/plugin-api';
+import { TemplateProvider, PluginValues, TemplateRenderContext } from '@doctool/plugin-api';
 import handlebars from 'handlebars';
 
 export class HandlebarsTemplateProvider implements TemplateProvider {
-	render<T extends object>(location: string, source: Buffer, data: T): Promise<Buffer> {
+	render<T extends object>(context: TemplateRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
 		const template = handlebars.compile(source.toString());
 		const options: handlebars.RuntimeOptions = {};
 		const buffer = Buffer.from(template(data, options), 'utf-8');

@@ -1,11 +1,21 @@
-export interface Provider { }
+import { RenderContext, Provider } from './common';
+import { PluginValues } from './plugin';
+import { TemplateRenderContext, TemplateProvider } from './templates';
+import { ContentRenderContext, ContentProvider } from './content';
 
-export interface TemplateProvider {
-	render<T extends object>(location: string, source: Buffer, data: T): Promise<Buffer>
-}
+export {
+	// Common
+	Provider,
+	RenderContext,
 
-export interface PluginValues {
-	templateProviders?: {
-		[key: string]: TemplateProvider
-	}
+	// Plugins
+	PluginValues,
+
+	// Templates
+	TemplateRenderContext,
+	TemplateProvider,
+
+	// Content
+	ContentRenderContext,
+	ContentProvider
 }

@@ -1,13 +1,19 @@
-import { TemplateProvider, PluginValues } from '@doctool/plugin-api';
-import { rejects } from 'assert';
+import { TemplateProvider, PluginValues, TemplateRenderContext } from '@doctool/plugin-api';
 import nunjucks from 'nunjucks';
-import { resolve } from 'path';
 
 export class NunjucksTemplateProvider implements TemplateProvider {
-	async render<T extends object>(location: string, source: Buffer, data: T): Promise<Buffer> {
-		const template = nunjucks.compile(source.toString());
+	async render<T extends object>(context: TemplateRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
+		const env = new nunjucks.Environment();
+		env.addFilter('renderContent', (name: string, callback: nunjucks.Callback<string, nunjucks.runtime.SafeString>) => {
+			context.renderContent(name)
+				.then(buffer => buffer.toString())
+				.then(html => new nunjucks.runtime.SafeString(html))
+				.then(safeString => callback(null, safeString))
+				.catch(err => callback(err, null));
+		}, true);
+
 		const result: string = await new Promise((resolve, reject) =>
-			template.render(data, (err, res) => err ? reject(err) : resolve(res as string))
+			env.renderString(source.toString(), data, (err, res) => err ? reject(err) : resolve(res as string))
 		);
 
 		return Buffer.from(result, 'utf-8');

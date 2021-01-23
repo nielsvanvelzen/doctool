@@ -1,6 +1,6 @@
 plugins:
   - "@doctool/template-nunjucks"
-  # - "@doctool/content-marked"
+  - "@doctool/content-marked"
   # - "@doctool/renderer-weasyprint"
   # - "@doctool/template-toc"
 
@@ -16,4 +16,4 @@ documents:
       # - template: doctool:toc.njk
       - template: page.njk
         data:
-          content: hello-world
+          content: hello-world.md

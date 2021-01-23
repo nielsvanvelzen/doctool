@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@doctool/cli": "0.0.1-dev",
-		"@doctool/template-handlebars": "0.0.1-dev"
+		"@doctool/template-handlebars": "0.0.1-dev",
+		"@doctool/content-marked": "0.0.1-dev"
 	}
 }

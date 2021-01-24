@@ -9,7 +9,7 @@
 		"build": "lerna run build"
 	},
 	"engines": {
-		"node": "^14.*.*"
+		"node": ">=14"
 	},
 	"devDependencies": {
 		"@types/node": "^14.14.22",

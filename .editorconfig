@@ -5,6 +5,10 @@ insert_final_newline = true
 charset = utf-8
 end_of_line = lf
 
-[*.rs]
+[*.ts, *.js, *.json, *.css, *.html, *.njk]
 indent_style = tab
 indent_size = 4
+
+[*.yml, *.yaml]
+indent_style = space
+indent_size = 2

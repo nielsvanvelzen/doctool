@@ -20,6 +20,8 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
+      - name: Setup WeasyPrint
+        run: pip3 install WeasyPrint
       - name: Install dependencies
         run: yarn --frozen-lockfile
       - name: Run build

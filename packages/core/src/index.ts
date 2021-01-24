@@ -83,16 +83,6 @@ async function renderContent(config: Config, name: string, data: DataObject): Pr
 	return rendered;
 }
 
-async function renderPrinter(config: Config, name: string, sources: PrinterSource[], data: DataObject): Promise<Buffer> {
-	const provider = await getPrinterProvider(config, name);
-	if (!provider) throw new Error(`No printer provider found for ${name}`);
-
-	// TODO Custom context? don't need render functions right?
-	const context: ContentRenderContext = createContext(config, data);
-	const rendered = provider.render(context, sources, data);
-	return rendered;
-}
-
 export async function buildDocument(config: Config, documentConfig: Document) {
 	const sources: PrinterSource[] = await Promise.all(documentConfig.document.map(async part => {
 		return {
@@ -101,8 +91,20 @@ export async function buildDocument(config: Config, documentConfig: Document) {
 		};
 	}));
 
-	const rendered = await renderPrinter(config, documentConfig.printer, sources, documentConfig.with);
-	const documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
+	const provider = await getPrinterProvider(config, documentConfig.printer);
+	if (!provider) throw new Error(`No printer provider found for ${name}`);
+
+	// TODO Custom context? don't need render functions right?
+	const context: ContentRenderContext = createContext(config, documentConfig.with);
+	const rendered = await provider.render(context, sources, documentConfig.with);
+	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
+
+	if (!path.extname(documentPath).length) {
+		let extension = provider.defaultExtension;
+		if (!extension.startsWith('.')) extension = `.${extension}`;
+
+		documentPath += extension;
+	}
 	
 	await fs.mkdir(path.dirname(documentPath), { recursive: true });
 	await fs.writeFile(documentPath, rendered);

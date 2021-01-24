@@ -7,6 +7,8 @@ export interface WeasyPrintPrinterProviderData extends HtmlPrinterProviderData {
 }
 
 export class WeasyPrintPrinterProvider implements PrinterProvider {
+	readonly defaultExtension: string = 'pdf';
+	
 	private readonly htmlPrinterProvider: HtmlPrinterProvider;
 
 	constructor(htmlPrinterProvider: HtmlPrinterProvider) {

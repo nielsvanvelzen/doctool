@@ -6,6 +6,8 @@ export interface HtmlPrinterProviderData {
 	css?: string[] | string
 }
 export class HtmlPrinterProvider implements PrinterProvider {
+	readonly defaultExtension: string = 'html';
+
 	private renderLayout(css: string[], body: string): string {
 		let head = '';
 		for (const href of css) head += `<link rel="stylesheet" href="${url.pathToFileURL(href)}" />`;

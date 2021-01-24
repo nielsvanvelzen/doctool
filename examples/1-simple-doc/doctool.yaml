@@ -1,16 +1,16 @@
 plugins:
-  - "@doctool/template-nunjucks"
-  - "@doctool/content-marked"
-  - "@doctool/printer-html"
-  - "@doctool/printer-weasyprint"
-  # - "@doctool/template-toc"
+  - '@doctool/template-nunjucks'
+  - '@doctool/content-marked'
+  - '@doctool/printer-html'
+  - '@doctool/printer-weasyprint'
+  # - '@doctool/template-toc'
 
 .document: &document
   - template: cover.njk
     with:
       title: Simple document
       author: Doctool developers
-  # - template: doctool:toc.njk
+  # - template: doctool:toc
   - template: page.njk
     with:
       content: hello-world.md
@@ -22,11 +22,11 @@ plugins:
 documents:
   simple-doc-html:
     printer: html
-    file: 'simple-doc-html.html'
+    file: simple-doc-html
     with: *html-options
     document: *document
   simple-doc-weasyprint:
     printer: weasyprint
-    file: 'simple-doc-weasyprint.pdf'
+    file: simple-doc-weasyprint
     with: *html-options
     document: *document

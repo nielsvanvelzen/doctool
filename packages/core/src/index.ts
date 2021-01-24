@@ -55,10 +55,22 @@ export function createContext(config: Config, data: DataObject): TemplateRenderC
 	};
 }
 
-async function renderTemplate(config: Config, name: string, data: DataObject): Promise<Buffer> {
-	const templatePath = path.resolve(config.workingDirectory, config.directories.template, name);
-	const extension = path.extname(templatePath);
+async function findFile(directory: string, name: string): Promise<string | null> {
+	if (!name) return null;
 
+	const files = await fs.readdir(directory);
+
+	for (const file of files) {
+		if (file.startsWith(name)) return path.resolve(directory, file);
+	}
+
+	return null;
+}
+
+async function renderTemplate(config: Config, name: string, data: DataObject): Promise<Buffer> {
+	const templatePath = await findFile(path.resolve(config.workingDirectory, config.directories.template), name);
+	if (!templatePath) throw new Error(`Could not find a file for template ${name}`);
+	const extension = path.extname(templatePath);
 	if (!extension) throw new Error(`Could not find an extension for template at ${templatePath}`);
 	const provider = await getTemplateProvider(config, extension);
 	if (!provider) throw new Error(`No template provider found for ${extension}`);
@@ -70,7 +82,8 @@ async function renderTemplate(config: Config, name: string, data: DataObject): P
 }
 
 async function renderContent(config: Config, name: string, data: DataObject): Promise<Buffer> { 
-	const contentPath = path.resolve(config.workingDirectory, config.directories.content, name);
+	const contentPath = await findFile(path.resolve(config.workingDirectory, config.directories.content), name);
+	if (!contentPath) throw new Error(`Could not find a file for content ${name}`);
 	const extension = path.extname(contentPath);
 
 	if (!extension) throw new Error(`Could not find an extension for content at ${contentPath}`);

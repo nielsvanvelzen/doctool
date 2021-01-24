@@ -15,12 +15,18 @@ plugins:
     with:
       content: hello-world.md
 
+.html-options: &html-options
+  css:
+    - document.css
+
 documents:
   simple-doc-html:
     printer: html
     file: 'simple-doc-html.html'
+    with: *html-options
     document: *document
   simple-doc-weasyprint:
     printer: weasyprint
     file: 'simple-doc-weasyprint.pdf'
+    with: *html-options
     document: *document

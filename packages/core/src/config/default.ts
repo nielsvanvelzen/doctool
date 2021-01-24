@@ -5,6 +5,7 @@ export const defaultConfig: Config = {
 	location: 'doctool.yaml',
 	directories: {
 		content: './content/',
+		asset: './asset/',
 		template: './template/',
 		cache: './.cache/',
 		dist: './dist/'

@@ -9,8 +9,8 @@ export class WeasyprintPrinterProvider implements PrinterProvider {
 		this.htmlPrinterProvider = htmlPrinterProvider;
 	}
 
-	async render(context: PrinterRenderContext, sources: PrinterSource[]): Promise<Buffer> {
-		const html = await this.htmlPrinterProvider.render(context, sources);
+	async render<T extends object>(context: PrinterRenderContext, sources: PrinterSource[], data: T): Promise<Buffer> {
+		const html = await this.htmlPrinterProvider.render(context, sources, data);
 	
 		return new Promise((resolve, reject) => {
 			const process = childProcess.spawn('weasyprint', ['-f', 'pdf', '-e', 'utf-8', '-', '-']);

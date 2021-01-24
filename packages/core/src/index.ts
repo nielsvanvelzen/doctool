@@ -3,8 +3,9 @@ import fs from 'fs/promises';
 import yaml from 'js-yaml';
 import path from 'path';
 import { PluginValues, TemplateProvider, TemplateRenderContext, ContentProvider, ContentRenderContext, PrinterSource, PrinterProvider } from '@doctool/plugin-api';
-import { Config, Document, DocumentPartData } from './config/config';
+import { Config, Document, DataObject } from './config/config';
 import { defaultConfig } from './config/default';
+import { Directory } from '@doctool/plugin-api/lib/common';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
 	const source = await fs.readFile(location);
@@ -46,7 +47,15 @@ export async function buildDocuments(config: Config) {
 	}
 }
 
-async function renderTemplate(config: Config, name: string, data: DocumentPartData): Promise<Buffer> {
+export function createContext(config: Config, data: DataObject): TemplateRenderContext {
+	return {
+		resolvePath: (type: Directory, name: string) => path.resolve(config.workingDirectory, config.directories[type], name),
+		renderContent: (name: string) => renderContent(config, name, data),
+		renderTemplate: (name: string) => renderTemplate(config, name, data)
+	};
+}
+
+async function renderTemplate(config: Config, name: string, data: DataObject): Promise<Buffer> {
 	const templatePath = path.resolve(config.workingDirectory, config.directories.template, name);
 	const extension = path.extname(templatePath);
 
@@ -55,15 +64,12 @@ async function renderTemplate(config: Config, name: string, data: DocumentPartDa
 	if (!provider) throw new Error(`No template provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
-	const context: TemplateRenderContext = {
-		renderContent: (name) => renderContent(config, name, data),
-		renderTemplate: (name: string) => renderTemplate(config, name, data)
-	};
+	const context: TemplateRenderContext = createContext(config, data);
 	const rendered = await provider.render(context, templatePath, await fs.readFile(templatePath), data);
 	return rendered;
 }
 
-async function renderContent(config: Config, name: string, data: DocumentPartData): Promise<Buffer> { 
+async function renderContent(config: Config, name: string, data: DataObject): Promise<Buffer> { 
 	const contentPath = path.resolve(config.workingDirectory, config.directories.content, name);
 	const extension = path.extname(contentPath);
 
@@ -72,24 +78,18 @@ async function renderContent(config: Config, name: string, data: DocumentPartDat
 	if (!provider) throw new Error(`No content provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
-	const context: ContentRenderContext = {
-		renderContent: (name) => renderContent(config, name, data),
-		renderTemplate: (name: string) => renderTemplate(config, name, data)
-	};
+	const context: ContentRenderContext = createContext(config, data);
 	const rendered = await provider.render(context, contentPath, await fs.readFile(contentPath), data);
 	return rendered;
 }
 
-async function renderPrinter(config: Config, name: string, sources: PrinterSource[]): Promise<Buffer> {
+async function renderPrinter(config: Config, name: string, sources: PrinterSource[], data: DataObject): Promise<Buffer> {
 	const provider = await getPrinterProvider(config, name);
 	if (!provider) throw new Error(`No printer provider found for ${name}`);
 
 	// TODO Custom context? don't need render functions right?
-	const context: ContentRenderContext = {
-		renderContent: (name) => renderContent(config, name, {}),
-		renderTemplate: (name: string) => renderTemplate(config, name, {})
-	};
-	const rendered = provider.render(context, sources);
+	const context: ContentRenderContext = createContext(config, data);
+	const rendered = provider.render(context, sources, data);
 	return rendered;
 }
 
@@ -101,7 +101,7 @@ export async function buildDocument(config: Config, documentConfig: Document) {
 		};
 	}));
 
-	const rendered = await renderPrinter(config, documentConfig.printer, sources);
+	const rendered = await renderPrinter(config, documentConfig.printer, sources, documentConfig.with);
 	const documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
 	
 	await fs.mkdir(path.dirname(documentPath), { recursive: true });

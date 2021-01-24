@@ -1,13 +1,16 @@
-export interface DocumentPartData { }
-export interface DocumentPart<T extends DocumentPartData> {
+export type DataObject = {
+	[key: string]: string | number | boolean
+};
+export interface DocumentPart {
 	template: string,
-	with: T
+	with: DataObject
 }
 
 export type Document = {
 	file: string,
 	printer: string,
-	document: DocumentPart<any>[]
+	with: DataObject,
+	document: DocumentPart[]
 };
 
 export interface Config {
@@ -16,6 +19,7 @@ export interface Config {
 	directories: {
 		content: string,
 		template: string,
+		asset: string,
 		cache: string,
 		dist: string
 	},

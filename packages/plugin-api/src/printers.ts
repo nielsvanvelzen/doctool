@@ -10,5 +10,5 @@ export interface PrinterSource {
 }
 
 export interface PrinterProvider extends Provider {
-	render(context: PrinterRenderContext, sources: PrinterSource[]): Promise<Buffer>
+	render<T extends object>(context: PrinterRenderContext, sources: PrinterSource[], data: T): Promise<Buffer>
 }

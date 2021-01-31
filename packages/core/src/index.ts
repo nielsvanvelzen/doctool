@@ -13,9 +13,7 @@ export async function readConfig(workingDirectory: string, location: string): Pr
 		filename: location
 	}) as object;
 
-	const mergedConfig = await deepmerge<Config, object>(defaultConfig, config, {
-		arrayMerge: (_, sourceArray) => sourceArray
-	});
+	const mergedConfig = await deepmerge<Config, object>(defaultConfig, config);
 
 	mergedConfig.workingDirectory = workingDirectory;
 	mergedConfig.location = location;

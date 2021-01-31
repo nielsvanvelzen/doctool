@@ -1,6 +1,7 @@
 {
 	"name": "@doctool/template-nunjucks",
-	"version": "0.0.1-dev",
+	"version": "0.0.1-dev.1",
+	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"files": [
@@ -10,7 +11,7 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "0.0.1-dev",
+		"@doctool/plugin-api": "^0.0.1-dev.1",
 		"nunjucks": "^3.2.2"
 	},
 	"devDependencies": {

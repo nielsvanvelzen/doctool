@@ -1,6 +1,7 @@
 {
 	"name": "@doctool/cli",
-	"version": "0.0.1-dev",
+	"version": "0.0.1-dev.1",
+	"license": "MIT",
 	"bin": {
 		"doctool": "bin/doctool.js"
 	},
@@ -12,7 +13,7 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/core": "0.0.1-dev",
+		"@doctool/core": "^0.0.1-dev.1",
 		"cac": "^6.7.1"
 	}
 }

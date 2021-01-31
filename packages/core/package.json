@@ -1,6 +1,7 @@
 {
 	"name": "@doctool/core",
-	"version": "0.0.1-dev",
+	"version": "0.0.1-dev.1",
+	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"files": [
@@ -10,12 +11,12 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "0.0.1-dev",
+		"@doctool/plugin-api": "^0.0.1-dev.1",
 		"deepmerge": "^4.2.2",
 		"js-yaml": "^4.0.0"
 	},
 	"devDependencies": {
-		"@types/js-yaml": "^4.0.0",
-		"@types/deepmerge": "^2.2.0"
+		"@types/deepmerge": "^2.2.0",
+		"@types/js-yaml": "^4.0.0"
 	}
 }

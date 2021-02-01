@@ -17,6 +17,7 @@ export interface Config {
 	workingDirectory: string,
 	location: string,
 	directories: {
+		namespaces: boolean,
 		content: string,
 		template: string,
 		asset: string,

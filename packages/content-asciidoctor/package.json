@@ -1,0 +1,17 @@
+{
+	"name": "@doctool/content-asciidoctor",
+	"version": "0.0.1-dev.1",
+	"license": "MIT",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"files": [
+		"lib"
+	],
+	"scripts": {
+		"build": "tsc -b tsconfig.json"
+	},
+	"dependencies": {
+		"@doctool/plugin-api": "^0.0.1-dev.1",
+		"asciidoctor": "^2.2.1"
+	}
+}

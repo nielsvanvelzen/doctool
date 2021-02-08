@@ -85,7 +85,11 @@ export function createContext(config: Config, document: Document, data: DataObje
 	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
 
 	return {
-		resolvePath: (type: Directory, name: string) => path.resolve(basePath, config.directories[type], name),
+		resolvePath: (type: Directory, name: string) => {
+			if (name.startsWith('#')) return name;
+			
+			return path.resolve(basePath, config.directories[type], name)
+		},
 		renderContent: (name: string) => renderContent(config, document, name, data),
 		renderTemplate: (name: string) => renderTemplate(config, document, name, data)
 	};

@@ -7,6 +7,7 @@ export interface DocumentPart {
 }
 
 export type Document = {
+	namespace?: string,
 	file: string,
 	printer: string,
 	with: DataObject,

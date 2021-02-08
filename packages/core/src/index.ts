@@ -46,6 +46,11 @@ export async function readConfig(workingDirectory: string, location: string): Pr
 	mergedConfig.workingDirectory = workingDirectory;
 	mergedConfig.location = location;
 
+	Object.entries(mergedConfig.documents).forEach(([name, document]) => {
+		if (!document.namespace) document.namespace = name;
+		if (!document.with) document.with = {};
+	});
+
 	return mergedConfig;
 }
 
@@ -54,6 +59,8 @@ export async function readConfig(workingDirectory: string, location: string): Pr
  * to watch for changes.
  */
 export async function getRelevantFiles(config: Config) {
+	//TODO add namespace paths
+
 	return [
 		// Config
 		path.resolve(config.workingDirectory, config.location),
@@ -73,28 +80,35 @@ export async function buildDocuments(config: Config) {
 	}
 }
 
-export function createContext(config: Config, data: DataObject): TemplateRenderContext {
+export function createContext(config: Config, document: Document, data: DataObject): TemplateRenderContext {
+	let basePath = config.workingDirectory;
+	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
+
 	return {
-		resolvePath: (type: Directory, name: string) => path.resolve(config.workingDirectory, config.directories[type], name),
-		renderContent: (name: string) => renderContent(config, name, data),
-		renderTemplate: (name: string) => renderTemplate(config, name, data)
+		resolvePath: (type: Directory, name: string) => path.resolve(basePath, config.directories[type], name),
+		renderContent: (name: string) => renderContent(config, document, name, data),
+		renderTemplate: (name: string) => renderTemplate(config, document, name, data)
 	};
 }
 
-async function findFile(directory: string, name: string): Promise<string | null> {
+async function findFile(config: Config, document: Document, directory: string, name: string): Promise<string | null> {
 	if (!name) return null;
 
-	const files = await fs.readdir(directory);
+	let basePath = config.workingDirectory;
+	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
+	basePath = path.resolve(basePath, directory);
+
+	const files = await fs.readdir(basePath);
 
 	for (const file of files) {
-		if (file.startsWith(name)) return path.resolve(directory, file);
+		if (file.startsWith(name)) return path.resolve(basePath, file);
 	}
 
 	return null;
 }
 
-async function renderTemplate(config: Config, name: string, data: DataObject): Promise<Buffer> {
-	const templatePath = await findFile(path.resolve(config.workingDirectory, config.directories.template), name);
+async function renderTemplate(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> {
+	const templatePath = await findFile(config, document, config.directories.template, name);
 	if (!templatePath) throw new Error(`Could not find a file for template ${name}`);
 	const extension = path.extname(templatePath);
 	if (!extension) throw new Error(`Could not find an extension for template at ${templatePath}`);
@@ -102,13 +116,13 @@ async function renderTemplate(config: Config, name: string, data: DataObject): P
 	if (!provider) throw new Error(`No template provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
-	const context: TemplateRenderContext = createContext(config, data);
+	const context: TemplateRenderContext = createContext(config, document, data);
 	const rendered = await provider.render(context, templatePath, await fs.readFile(templatePath), data);
 	return rendered;
 }
 
-async function renderContent(config: Config, name: string, data: DataObject): Promise<Buffer> { 
-	const contentPath = await findFile(path.resolve(config.workingDirectory, config.directories.content), name);
+async function renderContent(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> { 
+	const contentPath = await findFile(config, document, config.directories.content, name);
 	if (!contentPath) throw new Error(`Could not find a file for content ${name}`);
 	const extension = path.extname(contentPath);
 
@@ -117,7 +131,7 @@ async function renderContent(config: Config, name: string, data: DataObject): Pr
 	if (!provider) throw new Error(`No content provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
-	const context: ContentRenderContext = createContext(config, data);
+	const context: ContentRenderContext = createContext(config, document, data);
 	const rendered = await provider.render(context, contentPath, await fs.readFile(contentPath), data);
 	return rendered;
 }
@@ -126,7 +140,7 @@ export async function buildDocument(config: Config, documentConfig: Document) {
 	const sources: PrinterSource[] = await Promise.all(documentConfig.document.map(async part => {
 		return {
 			name: part.template,
-			content: await renderTemplate(config, part.template, part.with)
+			content: await renderTemplate(config, documentConfig, part.template, part.with)
 		};
 	}));
 
@@ -134,7 +148,7 @@ export async function buildDocument(config: Config, documentConfig: Document) {
 	if (!provider) throw new Error(`No printer provider found for ${name}`);
 
 	// TODO Custom context? don't need render functions right?
-	const context: ContentRenderContext = createContext(config, documentConfig.with);
+	const context: ContentRenderContext = createContext(config, documentConfig, documentConfig.with);
 	const rendered = await provider.render(context, sources, documentConfig.with);
 	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
 

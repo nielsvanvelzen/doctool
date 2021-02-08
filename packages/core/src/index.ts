@@ -86,8 +86,8 @@ export function getRelevantFiles(config: Config): { [key: string]: string } {
 export async function buildDocuments(config: Config) {
 	await validatePlugins(config);
 
-	for (const [document, documentConfig] of Object.entries(config.documents)) {
-		await buildDocument(config, document, documentConfig);
+	for await (const [document, documentConfig] of Object.entries(config.documents)) {
+		buildDocument(config, document, documentConfig);
 	}
 }
 

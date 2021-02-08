@@ -14,6 +14,7 @@
 	},
 	"dependencies": {
 		"@doctool/core": "^0.0.1-dev.1",
-		"cac": "^6.7.1"
+		"cac": "^6.7.1",
+		"chokidar": "^3.5.1"
 	}
 }

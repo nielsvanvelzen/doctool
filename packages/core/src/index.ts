@@ -58,25 +58,36 @@ export async function readConfig(workingDirectory: string, location: string): Pr
  * Returns an array of paths for all relevant files and directories
  * to watch for changes.
  */
-export async function getRelevantFiles(config: Config) {
-	//TODO add namespace paths
+export function getRelevantFiles(config: Config): { [key: string]: string } {
+	const paths = {
+		[path.resolve(config.workingDirectory, config.location)]: '*'
+	};
 
-	return [
-		// Config
-		path.resolve(config.workingDirectory, config.location),
-		// Document data
-		path.resolve(config.workingDirectory, config.directories.content),
-		path.resolve(config.workingDirectory, config.directories.template),
-	];
+	if (config.directories.namespaces) {
+		const namespaces = Object.entries(config.documents)
+			.map(([document, { namespace }]) => ({ document, namespace }));
+
+		for (const { document, namespace } of namespaces) {
+			if (!namespace) continue;
+
+			paths[path.resolve(config.workingDirectory, namespace, config.directories.content)] = document;
+			paths[path.resolve(config.workingDirectory, namespace, config.directories.template)] = document;
+			paths[path.resolve(config.workingDirectory, namespace, config.directories.asset)] = document;
+		}
+	} else {
+		paths[path.resolve(config.workingDirectory, config.directories.content)] = '*';
+		paths[path.resolve(config.workingDirectory, config.directories.template)] = '*';
+		paths[path.resolve(config.workingDirectory, config.directories.asset)] = '*';
+	}
+
+	return paths;
 }
 
 export async function buildDocuments(config: Config) {
 	await validatePlugins(config);
 
 	for (const [document, documentConfig] of Object.entries(config.documents)) {
-		console.info(`Building ${document}`);
-
-		await buildDocument(config, documentConfig);
+		await buildDocument(config, document, documentConfig);
 	}
 }
 
@@ -87,7 +98,7 @@ export function createContext(config: Config, document: Document, data: DataObje
 	return {
 		resolvePath: (type: Directory, name: string) => {
 			if (name.startsWith('#')) return name;
-			
+
 			return path.resolve(basePath, config.directories[type], name)
 		},
 		renderContent: (name: string) => renderContent(config, document, name, data),
@@ -140,7 +151,9 @@ async function renderContent(config: Config, document: Document, name: string, d
 	return rendered;
 }
 
-export async function buildDocument(config: Config, documentConfig: Document) {
+export async function buildDocument(config: Config, documentName: string, documentConfig: Document) {
+	console.info(`Building ${documentName}`);
+
 	const sources: PrinterSource[] = await Promise.all(documentConfig.document.map(async part => {
 		return {
 			name: part.template,

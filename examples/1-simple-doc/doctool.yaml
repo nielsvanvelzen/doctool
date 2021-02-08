@@ -7,7 +7,7 @@ plugins:
   # - '@doctool/template-toc'
 
 .document: &document
-  !!import document.yaml
+  !import document.yaml
 
 .html-options: &html-options
   css:

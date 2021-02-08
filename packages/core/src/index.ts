@@ -10,7 +10,7 @@ import { Directory } from '@doctool/plugin-api/lib/common';
 
 
 function createImportType(directory: string, getSchema: () => yaml.Schema) {
-	return new yaml.Type('tag:yaml.org,2002:import', {
+	return new yaml.Type('!import', {
 		kind: 'scalar',
 		resolve: (path) => {
 			return typeof path == 'string';

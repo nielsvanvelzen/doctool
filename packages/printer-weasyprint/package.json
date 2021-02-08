@@ -12,6 +12,10 @@
 	},
 	"dependencies": {
 		"@doctool/plugin-api": "^0.0.1-dev.2",
-		"@doctool/printer-html": "^0.0.1-dev.2"
+		"@doctool/printer-html": "^0.0.1-dev.2",
+		"escape-html": "^1.0.3"
+	},
+	"devDependencies": {
+		"@types/escape-html": "^1.0.0"
 	}
 }

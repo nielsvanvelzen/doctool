@@ -10,6 +10,7 @@ plugins:
   !import document.yaml
 
 .html-options: &html-options
+  title: Simple document
   css:
     - document.css
 

@@ -1,4 +1,4 @@
-import { PluginValues, ContentProvider, ContentRenderContext, PrinterProvider, PrinterRenderContext, PrinterSource } from '@doctool/plugin-api';
+import { PluginValues, PrinterProvider, PrinterRenderContext, PrinterSource } from '@doctool/plugin-api';
 import HtmlPrinterPlugin, { HtmlPrinterProvider, HtmlPrinterProviderData } from '@doctool/printer-html';
 import childProcess from 'child_process';
 
@@ -30,8 +30,8 @@ export class WeasyPrintPrinterProvider implements PrinterProvider {
 				// Output (stdout)
 				'-'
 			];
+			
 			const process = childProcess.spawn(bin, options);
-
 			const buffers: Buffer[] = [];
 			process.stdout.on('data', chunk => buffers.push(chunk));
 			process.stderr.pipe(process.stderr as any);

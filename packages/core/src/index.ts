@@ -83,7 +83,7 @@ export function getRelevantFiles(config: Config): { [key: string]: string } {
 	return paths;
 }
 
-export async function buildDocuments(config: Config) {
+export async function buildDocuments(config: Config): Promise<void> {
 	await validatePlugins(config);
 
 	for await (const [document, documentConfig] of Object.entries(config.documents)) {
@@ -151,7 +151,7 @@ async function renderContent(config: Config, document: Document, name: string, d
 	return rendered;
 }
 
-export async function buildDocument(config: Config, documentName: string, documentConfig: Document) {
+export async function buildDocument(config: Config, documentName: string, documentConfig: Document): Promise<void> {
 	console.info(`Building ${documentName}`);
 
 	const sources: PrinterSource[] = await Promise.all(documentConfig.document.map(async part => {
@@ -162,7 +162,7 @@ export async function buildDocument(config: Config, documentName: string, docume
 	}));
 
 	const provider = await getPrinterProvider(config, documentConfig.printer);
-	if (!provider) throw new Error(`No printer provider found for ${name}`);
+	if (!provider) throw new Error(`No printer provider found for ${documentConfig.printer}`);
 
 	// TODO Custom context? don't need render functions right?
 	const context: ContentRenderContext = createContext(config, documentConfig, documentConfig.with);

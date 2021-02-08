@@ -11,6 +11,10 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.1"
+		"@doctool/plugin-api": "^0.0.1-dev.1",
+		"parse5-html-rewriting-stream": "^6.0.1"
+	},
+	"devDependencies": {
+		"@types/parse5-html-rewriting-stream": "^5.1.2"
 	}
 }

@@ -1,18 +1,46 @@
 import deepmerge from 'deepmerge';
 import fs from 'fs/promises';
-import yaml from 'js-yaml';
+import fsSync from 'fs';
+import yaml, { DEFAULT_SCHEMA } from 'js-yaml';
 import path from 'path';
 import { PluginValues, TemplateProvider, TemplateRenderContext, ContentProvider, ContentRenderContext, PrinterSource, PrinterProvider } from '@doctool/plugin-api';
 import { Config, Document, DataObject } from './config/config';
 import { defaultConfig } from './config/default';
 import { Directory } from '@doctool/plugin-api/lib/common';
 
-export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
-	const source = await fs.readFile(location);
-	const config = yaml.load(source.toString(), {
-		filename: location
-	}) as object;
 
+function createImportType(directory: string, getSchema: () => yaml.Schema) {
+	return new yaml.Type('tag:yaml.org,2002:import', {
+		kind: 'scalar',
+		resolve: (path) => {
+			return typeof path == 'string';
+		},
+		construct: (file) => {
+			const location = path.resolve(directory, file);
+			const source = fsSync.readFileSync(location);
+
+			return yaml.load(source.toString(), {
+				filename: location,
+				schema: getSchema()
+			});
+		}
+	});
+}
+
+export async function readYaml<T>(filename: string): Promise<T> {
+	const schema = DEFAULT_SCHEMA.extend([
+		createImportType(path.dirname(filename), () => schema)
+	]);
+
+	const source = await fs.readFile(filename);
+	return yaml.load(source.toString(), {
+		filename,
+		schema
+	}) as unknown as T;
+}
+
+export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
+	const config = await readYaml<Config>(location);
 	const mergedConfig = await deepmerge<Config, object>(defaultConfig, config);
 
 	mergedConfig.workingDirectory = workingDirectory;

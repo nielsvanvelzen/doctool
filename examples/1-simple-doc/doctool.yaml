@@ -7,17 +7,7 @@ plugins:
   # - '@doctool/template-toc'
 
 .document: &document
-  - template: cover
-    with:
-      title: Simple document
-      author: Doctool developers
-  # - template: doctool:toc
-  - template: page
-    with:
-      content: hello-world.md
-  - template: page
-    with:
-      content: hello-world.adoc
+  !!import document.yaml
 
 .html-options: &html-options
   css:

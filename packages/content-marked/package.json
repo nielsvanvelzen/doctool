@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/content-marked",
-	"version": "0.0.1-dev.1",
+	"version": "0.0.1-dev.2",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -11,7 +11,7 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.1",
+		"@doctool/plugin-api": "^0.0.1-dev.2",
 		"marked": "^1.2.7"
 	},
 	"devDependencies": {

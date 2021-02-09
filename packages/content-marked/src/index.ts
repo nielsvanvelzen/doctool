@@ -1,5 +1,4 @@
 import { PluginValues, ContentProvider, ContentRenderContext } from '@doctool/plugin-api';
-import path from 'path';
 import marked from 'marked';
 
 export class MarkedContentProvider implements ContentProvider {

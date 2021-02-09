@@ -31,15 +31,15 @@ export class WeasyPrintPrinterProvider implements PrinterProvider {
 				'-'
 			];
 			
-			const process = childProcess.spawn(bin, options);
+			const child = childProcess.spawn(bin, options);
 			const buffers: Buffer[] = [];
-			process.stdout.on('data', chunk => buffers.push(chunk));
-			process.stderr.pipe(process.stderr as any);
-			process.on('close', () => resolve(Buffer.concat(buffers)));
-			process.on('error', err => reject(err));
+			child.stdout.on('data', chunk => buffers.push(chunk));
+			child.stderr.pipe(process.stderr);
+			child.on('close', () => resolve(Buffer.concat(buffers)));
+			child.on('error', err => reject(err));
 			
-			process.stdin.on('error', err => reject(err));
-			process.stdin.end(html, 'utf-8');
+			child.stdin.on('error', err => reject(err));
+			child.stdin.end(html, 'utf-8');
 		});
 	}
 }

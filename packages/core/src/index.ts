@@ -1,43 +1,14 @@
 import deepmerge from 'deepmerge';
 import fs from 'fs/promises';
 import fsSync from 'fs';
-import yaml, { DEFAULT_SCHEMA } from 'js-yaml';
 import path from 'path';
-import { PluginValues, TemplateProvider, TemplateRenderContext, ContentProvider, ContentRenderContext, PrinterSource, PrinterProvider } from '@doctool/plugin-api';
+import { TemplateRenderContext, ContentRenderContext, PrinterSource } from '@doctool/plugin-api';
 import { Config, Document, DataObject } from './config/config';
 import { defaultConfig } from './config/default';
 import { Directory } from '@doctool/plugin-api/lib/common';
-
-
-function createImportType(directory: string, getSchema: () => yaml.Schema) {
-	return new yaml.Type('!import', {
-		kind: 'scalar',
-		resolve: (path) => {
-			return typeof path == 'string';
-		},
-		construct: (file) => {
-			const location = path.resolve(directory, file);
-			const source = fsSync.readFileSync(location);
-
-			return yaml.load(source.toString(), {
-				filename: location,
-				schema: getSchema()
-			});
-		}
-	});
-}
-
-export async function readYaml<T>(filename: string): Promise<T> {
-	const schema = DEFAULT_SCHEMA.extend([
-		createImportType(path.dirname(filename), () => schema)
-	]);
-
-	const source = await fs.readFile(filename);
-	return yaml.load(source.toString(), {
-		filename,
-		schema
-	}) as unknown as T;
-}
+import { findFile } from './utils/io';
+import { readYaml } from './utils/yaml';
+import { getContentProvider, getPrinterProvider, getTemplateProvider, validatePlugins } from './plugins';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
 	const config = await readYaml<Config>(location);
@@ -119,40 +90,6 @@ export function createContext(config: Config, document: Document, data: DataObje
 	};
 }
 
-async function findFile(config: Config, document: Document, directory: string, name: string): Promise<string | null> {
-	if (!name) return null;
-
-	let basePath = config.workingDirectory;
-	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
-	basePath = path.resolve(basePath, directory, path.dirname(name));
-	
-	if (fsSync.existsSync(basePath)) {
-		const files = await fs.readdir(basePath);
-		const fileName = path.basename(name);
-
-		if (files.includes(fileName)) return path.resolve(basePath, fileName);
-		for (const file of files) {
-			if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
-		}
-	}
-
-	if (config.directories.namespaces && config.directories.shared) {
-		basePath = path.resolve(config.workingDirectory, config.directories.shared, directory, path.dirname(name));
-		
-		if (fsSync.existsSync(basePath)) {
-			const files = await fs.readdir(basePath);
-			const fileName = path.basename(name);
-
-			if (files.includes(fileName)) return path.resolve(basePath, fileName);
-			for (const file of files) {
-				if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
-			}
-		}
-	}
-	
-	return null;
-}
-
 async function renderTemplate(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> {
 	const templatePath = await findFile(config, document, config.directories.template, name);
 	if (!templatePath) throw new Error(`Could not find a file for template ${name}`);
@@ -167,7 +104,7 @@ async function renderTemplate(config: Config, document: Document, name: string, 
 	return rendered;
 }
 
-async function renderContent(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> { 
+async function renderContent(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> {
 	const contentPath = await findFile(config, document, config.directories.content, name);
 	if (!contentPath) throw new Error(`Could not find a file for content ${name}`);
 	const extension = path.extname(contentPath);
@@ -206,73 +143,7 @@ export async function buildDocument(config: Config, documentName: string, docume
 
 		documentPath += extension;
 	}
-	
+
 	await fs.mkdir(path.dirname(documentPath), { recursive: true });
 	await fs.writeFile(documentPath, rendered);
-}
-
-const loadedPlugins: string[] = [];
-const providers: {
-	template: { [key: string]: TemplateProvider },
-	content: { [key: string]: ContentProvider },
-	printer: { [key: string]: PrinterProvider }
-} = {
-	template: {},
-	content: {},
-	printer: {}
-};
-
-async function validatePlugins(config: Config): Promise<void> {
-	for (const id of config.plugins) {
-		if (!loadedPlugins.includes(id)) {
-			await loadPlugin(config, id);
-		}
-	}
-}
-
-export async function getTemplateProvider<T extends TemplateProvider>(config: Config, provider: string): Promise<T | null> {
-	return providers.template[provider] as T || null;
-}
-
-export async function getContentProvider<T extends ContentProvider>(config: Config, provider: string): Promise<T | null> {
-	return providers.content[provider] as T || null;
-}
-
-export async function getPrinterProvider<T extends PrinterProvider>(config: Config, provider: string): Promise<T | null> {
-	return providers.printer[provider] as T || null;
-}
-
-export async function loadPlugin(config: Config, id: string) {
-	console.info(`Loading plugin ${id}`);
-	
-	let location: string | null = null;
-	try {
-		location = require.resolve(id, {
-			paths: [
-				path.resolve(config.workingDirectory),
-				path.dirname(config.location),
-				process.cwd(),
-			]
-		});
-	} catch (err) { }
-
-	if (!location) throw new Error(`Unable to load plugin ${id}.`);
-
-	const plugin = await import(location).then(module => module?.default);
-	let values: PluginValues = {};
-	if (typeof plugin === 'function') values = await plugin();
-
-	Object.entries(values.templateProviders || {}).forEach(([extension, provider]) => {
-		providers.template[extension] = provider;
-	});
-
-	Object.entries(values.contentProviders || {}).forEach(([extension, provider]) => {
-		providers.content[extension] = provider;
-	});
-
-	Object.entries(values.printerProviders || {}).forEach(([name, provider]) => {
-		providers.printer[name] = provider;
-	});
-
-	loadedPlugins.push(id);
 }

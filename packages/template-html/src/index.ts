@@ -1,6 +1,5 @@
 import { TemplateProvider, PluginValues, TemplateRenderContext } from '@doctool/plugin-api';
 import RewritingStream from 'parse5-html-rewriting-stream';
-import { resolve } from 'path';
 
 const rewriteHref = ['a', 'area', 'base', 'link'];
 const rewriteSrc = ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'];
@@ -20,12 +19,12 @@ export class HtmlTemplateProvider implements TemplateProvider {
 			if (rewriteHref.includes(tag.tagName)) {
 				for (const attr of tag.attrs) {
 					if (attr.name == 'href')
-						attr.value = context.resolvePath('asset', attr.value);
+						attr.value = new URL(`file:///${context.resolvePath('asset', context.resolvePath('asset', attr.value))}`).href;
 				}
 			} else if (rewriteSrc.includes(tag.tagName)) {
 				for (const attr of tag.attrs) {
 					if (attr.name == 'src')
-						attr.value = context.resolvePath('asset', attr.value);
+						attr.value = new URL(`file:///${context.resolvePath('asset', context.resolvePath('asset', attr.value))}`).href;
 				}
 			}
 

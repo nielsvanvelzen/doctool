@@ -21,10 +21,31 @@ export class HtmlTemplateProvider implements TemplateProvider {
 					if (attr.name == 'href')
 						attr.value = new URL(`file:///${context.resolvePath('asset', context.resolvePath('asset', attr.value))}`).href;
 				}
-			} else if (rewriteSrc.includes(tag.tagName)) {
+			}
+			
+			if (rewriteSrc.includes(tag.tagName)) {
 				for (const attr of tag.attrs) {
 					if (attr.name == 'src')
 						attr.value = new URL(`file:///${context.resolvePath('asset', context.resolvePath('asset', attr.value))}`).href;
+				}
+			}
+			
+			if (tag.tagName.startsWith('doctool:')) {
+				const tagName = tag.tagName.replace(/^doctool:/, '');
+
+				if (tag.selfClosing && tagName == 'data') {
+					const key = tag.attrs.find(it => it.name == 'key')?.value;
+					const element = tag.attrs.find(it => it.name == 'element')?.value;
+
+					if (key && key in data) {
+						const text = (data as any)[key].toString();
+
+						if (element) rewriter.emitStartTag({ tagName: element, attrs: [], selfClosing: false });
+						rewriter.emitText({ text });
+						if (element) rewriter.emitEndTag({ tagName: element });
+
+						return;
+					}
 				}
 			}
 

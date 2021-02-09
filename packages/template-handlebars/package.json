@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/template-handlebars",
-	"version": "0.0.1-dev.3",
+	"version": "0.0.1-dev.4",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -11,7 +11,8 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.3",
+		"@doctool/plugin-api": "^0.0.1-dev.4",
 		"handlebars": "^4.7.6"
-	}
+	},
+	"gitHead": "bb8532ae652182eab16f1fc04837eb72477a2e8e"
 }

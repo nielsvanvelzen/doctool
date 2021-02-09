@@ -112,11 +112,13 @@ async function findFile(config: Config, document: Document, directory: string, n
 	let basePath = config.workingDirectory;
 	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
 	basePath = path.resolve(basePath, directory);
+	basePath = path.resolve(basePath, path.dirname(name));
 
 	const files = await fs.readdir(basePath);
+	const fileName = path.basename(name);
 
 	for (const file of files) {
-		if (file.startsWith(name)) return path.resolve(basePath, file);
+		if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
 	}
 
 	return null;

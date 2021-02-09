@@ -19,6 +19,7 @@ export interface Config {
 	location: string,
 	directories: {
 		namespaces: boolean,
+		shared?: string,
 		content: string,
 		template: string,
 		asset: string,

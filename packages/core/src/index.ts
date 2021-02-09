@@ -98,8 +98,15 @@ export function createContext(config: Config, document: Document, data: DataObje
 	return {
 		resolvePath: (type: Directory, name: string) => {
 			if (name.startsWith('#')) return name;
+			const location = path.resolve(basePath, config.directories[type], name);
+			if (fsSync.existsSync(location)) return location;
 
-			return path.resolve(basePath, config.directories[type], name)
+			if (config.directories.namespaces && config.directories.shared) {
+				const sharedLocation = path.resolve(config.workingDirectory, config.directories.shared, config.directories[type], name);
+				if (fsSync.existsSync(sharedLocation)) return sharedLocation;
+			}
+
+			throw new Error(`Could not solve path ${type}/${name}.`);
 		},
 		renderContent: (name: string) => renderContent(config, document, name, data),
 		renderTemplate: (name: string) => renderTemplate(config, document, name, data)
@@ -113,14 +120,29 @@ async function findFile(config: Config, document: Document, directory: string, n
 	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
 	basePath = path.resolve(basePath, directory);
 	basePath = path.resolve(basePath, path.dirname(name));
-
-	const files = await fs.readdir(basePath);
-	const fileName = path.basename(name);
-
-	for (const file of files) {
-		if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
+	
+	if (fsSync.existsSync(basePath)) {
+		const files = await fs.readdir(basePath);
+		const fileName = path.basename(name);
+	
+		for (const file of files) {
+			if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
+		}
 	}
 
+	if (config.directories.namespaces && config.directories.shared) {
+		basePath = path.resolve(config.workingDirectory, config.directories.shared, directory, path.dirname(name));
+		
+		if (fsSync.existsSync(basePath)) {
+			const files = await fs.readdir(basePath);
+			const fileName = path.basename(name);
+		
+			for (const file of files) {
+				if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
+			}
+		}
+	}
+	
 	return null;
 }
 

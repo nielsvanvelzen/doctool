@@ -124,13 +124,13 @@ async function findFile(config: Config, document: Document, directory: string, n
 
 	let basePath = config.workingDirectory;
 	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
-	basePath = path.resolve(basePath, directory);
-	basePath = path.resolve(basePath, path.dirname(name));
+	basePath = path.resolve(basePath, directory, path.dirname(name));
 	
 	if (fsSync.existsSync(basePath)) {
 		const files = await fs.readdir(basePath);
 		const fileName = path.basename(name);
-	
+
+		if (files.includes(fileName)) return path.resolve(basePath, fileName);
 		for (const file of files) {
 			if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
 		}
@@ -142,7 +142,8 @@ async function findFile(config: Config, document: Document, directory: string, n
 		if (fsSync.existsSync(basePath)) {
 			const files = await fs.readdir(basePath);
 			const fileName = path.basename(name);
-		
+
+			if (files.includes(fileName)) return path.resolve(basePath, fileName);
 			for (const file of files) {
 				if (path.basename(file, path.extname(file)) == fileName) return path.resolve(basePath, file);
 			}

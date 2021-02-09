@@ -74,6 +74,12 @@ export function getRelevantFiles(config: Config): { [key: string]: string } {
 			paths[path.resolve(config.workingDirectory, namespace, config.directories.template)] = document;
 			paths[path.resolve(config.workingDirectory, namespace, config.directories.asset)] = document;
 		}
+
+		if (config.directories.shared) {
+			paths[path.resolve(config.workingDirectory, config.directories.shared, config.directories.content)] = '*';
+			paths[path.resolve(config.workingDirectory, config.directories.shared, config.directories.template)] = '*';
+			paths[path.resolve(config.workingDirectory, config.directories.shared, config.directories.asset)] = '*';
+		}
 	} else {
 		paths[path.resolve(config.workingDirectory, config.directories.content)] = '*';
 		paths[path.resolve(config.workingDirectory, config.directories.template)] = '*';

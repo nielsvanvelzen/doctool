@@ -2,6 +2,7 @@ import { PluginValues, PrinterProvider, PrinterRenderContext, PrinterSource } fr
 import prettier from 'prettier';
 import sass from 'sass';
 import url from 'url';
+import path from 'path';
 import escapeHtml from 'escape-html';
 
 export interface HtmlPrinterProviderData {
@@ -15,7 +16,16 @@ export class HtmlPrinterProvider implements PrinterProvider {
 	private async renderCss(location: string): Promise<string> {
 		if (location.endsWith('.scss')) {
 			const result = sass.renderSync({
-				file: location
+				file: location,
+				functions: {
+					'url($url)': (relativeUrl) => {
+						if (!(relativeUrl instanceof sass.types.String))
+							throw '$url: Expected a string.';
+
+						const absoluteUrl = url.pathToFileURL(path.resolve(path.dirname(location), relativeUrl.getValue()));
+						return new sass.types.String(`url('${absoluteUrl}')`);
+					}
+				}
 			});
 
 			return `<style>${result.css}</style>`;
@@ -24,7 +34,7 @@ export class HtmlPrinterProvider implements PrinterProvider {
 		return `<link rel="stylesheet" href="${url.pathToFileURL(location)}" />`;
 	}
 
-	private async renderLayout(title: string|null, css: string[], body: string): Promise<string> {
+	private async renderLayout(title: string | null, css: string[], body: string): Promise<string> {
 		let head = '';
 
 		if (title) head += `<title>${escapeHtml(title)}</title>`;
@@ -43,7 +53,7 @@ export class HtmlPrinterProvider implements PrinterProvider {
 			parser: 'html',
 			endOfLine: 'auto'
 		};
-		
+
 		return prettier.format(source, options);
 	}
 

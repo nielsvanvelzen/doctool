@@ -1,6 +1,6 @@
 plugins:
   - '@doctool/content-nunjucks'
-  - '@doctool/content-marked'
+  - '@doctool/content-remark'
   - '@doctool/content-asciidoctor'
   - '@doctool/printer-html'
   - '@doctool/printer-weasyprint'

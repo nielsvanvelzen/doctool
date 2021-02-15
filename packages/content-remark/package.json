@@ -1,0 +1,19 @@
+{
+	"name": "@doctool/content-remark",
+	"version": "0.0.1-dev.5",
+	"license": "MIT",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"files": [
+		"lib"
+	],
+	"scripts": {
+		"build": "tsc -b tsconfig.json"
+	},
+	"dependencies": {
+		"@doctool/plugin-api": "^0.0.1-dev.5",
+		"@doctool/content-html": "^0.0.1-dev.5",
+		"remark": "^13.0.0",
+		"remark-html": "^13.0.1"
+	}
+}

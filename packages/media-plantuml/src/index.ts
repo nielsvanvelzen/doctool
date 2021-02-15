@@ -2,7 +2,7 @@ import { PluginValues, MediaProvider, MediaRenderContext } from '@doctool/plugin
 import path from 'path';
 import { PlantUmlPipe } from 'plantuml-pipe';
 
-export class PlantUmlContentProvider implements MediaProvider {
+export class PlantUmlMediaProvider implements MediaProvider {
 	readonly defaultExtension = '.svg';
 
 	render(context: MediaRenderContext, origin: string | null, location: string, source: Buffer): Promise<Buffer> {
@@ -26,7 +26,7 @@ export class PlantUmlContentProvider implements MediaProvider {
 export default async function (): Promise<PluginValues> {
 	return {
 		mediaProviders: {
-			'.puml': new PlantUmlContentProvider()
+			'.puml': new PlantUmlMediaProvider()
 		}
 	}
 }

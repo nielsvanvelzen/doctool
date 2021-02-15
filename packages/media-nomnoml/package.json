@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/media-nomnoml",
-	"version": "0.0.1-dev.6",
+	"version": "0.0.1-dev.7",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -11,7 +11,7 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.6",
+		"@doctool/plugin-api": "^0.0.1-dev.7",
 		"nomnoml": "^1.3.1"
 	}
 }

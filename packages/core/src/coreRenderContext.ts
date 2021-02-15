@@ -3,8 +3,32 @@ import path from 'path';
 import { RenderContext } from '@doctool/plugin-api';
 import { Config, Document, DataObject } from './config/config';
 import { Directory } from '@doctool/plugin-api/lib/common';
-import { renderContent } from './index';
-import url from 'url';
+import { renderContent, renderMedia } from './index';
+import url, { URL } from 'url';
+
+function isValidUrl(url: string) {
+	try {
+		new URL(url);
+
+		return true;
+	} catch (err) {
+		return false;
+	}
+}
+
+function resolvePath(config: Config, basePath: string, type: Directory, name: string) {
+	const location = path.resolve(basePath, config.directories[type], name);
+	if (fsSync.existsSync(location))
+		return location;
+
+	if (config.directories.namespaces && config.directories.shared) {
+		const sharedLocation = path.resolve(config.workingDirectory, config.directories.shared, config.directories[type], name);
+		if (fsSync.existsSync(sharedLocation))
+			return sharedLocation;
+	}
+
+	return null;
+}
 
 export class CoreRenderContext implements RenderContext {
 	private config: Config;
@@ -12,6 +36,7 @@ export class CoreRenderContext implements RenderContext {
 	private data: DataObject;
 	private origin: string | null;
 	private basePath: string;
+	private promises: Promise<unknown>[] = [];
 
 	constructor(config: Config, origin: string | null, document: Document, data: DataObject) {
 		this.config = config;
@@ -26,42 +51,47 @@ export class CoreRenderContext implements RenderContext {
 	}
 
 	resolvePath(type: Directory, name: string): string {
-		if (name.startsWith('#'))
-			return name;
-		const location = path.resolve(this.basePath, this.config.directories[type], name);
-		if (fsSync.existsSync(location))
-			return location;
+		// Fragment should not be resolved
+		if (name.startsWith('#')) return name;
 
-		if (this.config.directories.namespaces && this.config.directories.shared) {
-			const sharedLocation = path.resolve(this.config.workingDirectory, this.config.directories.shared, this.config.directories[type], name);
-			if (fsSync.existsSync(sharedLocation))
-				return sharedLocation;
-		}
+		const location = resolvePath(this.config, this.basePath, type, name);
+		if (location == null) throw new Error(`Could not solve path ${type}/${name}.`);
 
-		throw new Error(`Could not solve path ${type}/${name}.`);
+		return location;
 	}
 
 	resolveUrl(name: string): string {
-		// Hash
-		if (name.startsWith('#'))
-			return name;
+		// Fragment should not be resolved
+		if (name.startsWith('#')) return name;
 
-		try {
-			// Validate current format
-			return new URL(name).href;
-		} catch (err) {
-			// Invalid URL, probably relative so ignore!
-		}
+		let candidate: URL | null = null;
 
-		if (this.origin) {
+		if (isValidUrl(name)) candidate = new URL(name);
+
+		if (candidate == null && this.origin) {
 			const relativePath = path.resolve(this.origin, name);
-			if (fsSync.existsSync(relativePath)) return url.pathToFileURL(relativePath).href;
+			if (fsSync.existsSync(relativePath)) candidate =  url.pathToFileURL(relativePath);
 		}
 
-		try {
-			const assetPath = this.resolvePath('asset', name);
-			return url.pathToFileURL(assetPath).href;
-		} catch (err) {
+		if (candidate == null) {
+			const assetPath = resolvePath(this.config, this.basePath, 'asset', name);
+			if (assetPath) candidate =  url.pathToFileURL(assetPath);
+		}
+
+		if (candidate != null) {
+			if (candidate.protocol == 'file:') {
+				try {
+					const { fileName, promise } = renderMedia(this.config, this.document, this.origin, url.fileURLToPath(candidate));
+					this.promises.push(promise);
+
+					candidate = url.pathToFileURL(fileName);
+				} catch (err) {
+					// Ignore, mostly means no extension was found for the media
+				}
+			}
+
+			return candidate.href;
+		} else {
 			console.error(`Could not resolve path ${name} from ${origin}.`);
 			return name;
 		}
@@ -69,5 +99,9 @@ export class CoreRenderContext implements RenderContext {
 
 	async renderContent(name: string): Promise<Buffer> {
 		return renderContent(this.config, this.document, name, this.data);
+	}
+
+	async awaitAll() {
+		await Promise.all(this.promises);
 	}
 }

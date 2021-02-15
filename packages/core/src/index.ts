@@ -1,13 +1,14 @@
 import deepmerge from 'deepmerge';
 import fs from 'fs/promises';
 import path from 'path';
-import { ContentRenderContext, PrinterSource } from '@doctool/plugin-api';
+import { PrinterSource } from '@doctool/plugin-api';
 import { Config, Document, DataObject } from './config/config';
 import { defaultConfig } from './config/default';
 import { findFile } from './utils/io';
 import { readYaml } from './utils/yaml';
-import { getContentProvider, getPrinterProvider, validatePlugins } from './plugins';
+import { getContentProvider, getMediaProvider, getPrinterProvider, validatePlugins } from './plugins';
 import { CoreRenderContext } from './coreRenderContext';
+import { createHash } from 'crypto';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
 	const config = await readYaml<Config>(location);
@@ -73,13 +74,40 @@ export async function renderContent(config: Config, document: Document, name: st
 	const extension = path.extname(usedPath);
 
 	if (!extension) throw new Error(`Could not find an extension for content at ${usedPath}`);
-	const provider = await getContentProvider(config, extension);
+	const provider = getContentProvider(extension);
 	if (!provider) throw new Error(`No content provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
-	const context: ContentRenderContext = new CoreRenderContext(config, usedPath, document, data);
+	const context = new CoreRenderContext(config, usedPath, document, data);
 	const rendered = await provider.render(context, usedPath, await fs.readFile(usedPath), data);
+	await context.awaitAll();
+
 	return rendered;
+}
+
+export function renderMedia(config: Config, document: Document, origin: string | null, location: string): { fileName: string, promise: Promise<void> } {
+	const extension = path.extname(location);
+	if (!extension) throw new Error(`Could not find an extension for media at ${location}`);
+
+	const provider = getMediaProvider(extension);
+	if (!provider) throw new Error(`No media provider found for ${extension}`);
+
+	let outputExtension = provider.defaultExtension;
+	if (!outputExtension.startsWith('.')) outputExtension = `.${outputExtension}`;
+
+	let outputName = createHash('md5').update(location).digest('hex').toString();
+	const fileName = path.resolve(config.workingDirectory, config.directories.cache, outputName  + outputExtension);
+
+	return {
+		fileName,
+		promise: (async () => {
+			const context = new CoreRenderContext(config, origin, document, {});
+			const rendered = await provider.render(context, origin, location, await fs.readFile(location));
+			await fs.mkdir(path.dirname(fileName), { recursive: true });
+			await fs.writeFile(fileName, rendered);
+			await context.awaitAll();
+		})()
+	};
 }
 
 export async function buildDocument(config: Config, documentName: string, documentConfig: Document): Promise<void> {
@@ -92,12 +120,14 @@ export async function buildDocument(config: Config, documentName: string, docume
 		};
 	}));
 
-	const provider = await getPrinterProvider(config, documentConfig.printer);
+	const provider = getPrinterProvider(documentConfig.printer);
 	if (!provider) throw new Error(`No printer provider found for ${documentConfig.printer}`);
 
 	// TODO Custom context? don't need render functions right?
-	const context: ContentRenderContext = new CoreRenderContext(config, null, documentConfig, documentConfig.with);
+	const context = new CoreRenderContext(config, null, documentConfig, documentConfig.with);
 	const rendered = await provider.render(context, sources, documentConfig.with);
+	await context.awaitAll();
+
 	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
 
 	if (!path.extname(documentPath).length) {

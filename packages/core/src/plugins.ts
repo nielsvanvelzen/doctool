@@ -1,13 +1,15 @@
-import { ContentProvider, PrinterProvider, PluginValues } from '@doctool/plugin-api';
+import { ContentProvider, MediaProvider, PrinterProvider, PluginValues } from '@doctool/plugin-api';
 import path from 'path';
 import { Config } from './config/config';
 
 const loadedPlugins: string[] = [];
 const providers: {
 	content: { [key: string]: ContentProvider },
+	media: { [key: string]: MediaProvider },
 	printer: { [key: string]: PrinterProvider }
 } = {
 	content: {},
+	media: {},
 	printer: {}
 };
 
@@ -19,11 +21,15 @@ export async function validatePlugins(config: Config): Promise<void> {
 	}
 }
 
-export async function getContentProvider<T extends ContentProvider>(config: Config, provider: string): Promise<T | null> {
+export function getContentProvider<T extends ContentProvider>(provider: string): T | null {
 	return providers.content[provider] as T || null;
 }
 
-export async function getPrinterProvider<T extends PrinterProvider>(config: Config, provider: string): Promise<T | null> {
+export function getMediaProvider<T extends MediaProvider>(provider: string): T | null {
+	return providers.media[provider] as T || null;
+}
+
+export function getPrinterProvider<T extends PrinterProvider>(provider: string): T | null {
 	return providers.printer[provider] as T || null;
 }
 
@@ -49,6 +55,10 @@ export async function loadPlugin(config: Config, id: string) {
 
 	Object.entries(values.contentProviders || {}).forEach(([extension, provider]) => {
 		providers.content[extension] = provider;
+	});
+
+	Object.entries(values.mediaProviders || {}).forEach(([extension, provider]) => {
+		providers.media[extension] = provider;
 	});
 
 	Object.entries(values.printerProviders || {}).forEach(([name, provider]) => {

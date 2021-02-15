@@ -2,6 +2,7 @@ import { PluginValues, ContentProvider, ContentRenderContext } from '@doctool/pl
 import HtmlContentPlugin, { HtmlContentProvider } from '@doctool/content-html';
 import remark from 'remark';
 import remarkHtml from 'remark-html';
+import remarkGfm from 'remark-gfm';
 
 export class RemarkContentProvider implements ContentProvider {
 	private readonly htmlContentProvider: HtmlContentProvider;
@@ -12,7 +13,10 @@ export class RemarkContentProvider implements ContentProvider {
 
 	async render<T extends object>(context: ContentRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
 		const processor = remark();
-		processor.use(remarkHtml);
+		processor.use(remarkGfm);
+		processor.use(remarkHtml, {
+			sanitize: false
+		});
 		const result = await processor.process(source);
 
 		return await this.htmlContentProvider.render(context, location, Buffer.from(String(result), 'utf-8'), data);

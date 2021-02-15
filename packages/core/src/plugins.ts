@@ -21,15 +21,15 @@ export async function validatePlugins(config: Config): Promise<void> {
 	}
 }
 
-export async function getContentProvider<T extends ContentProvider>(config: Config, provider: string): Promise<T | null> {
+export function getContentProvider<T extends ContentProvider>(provider: string): T | null {
 	return providers.content[provider] as T || null;
 }
 
-export async function geMediaProvider<T extends MediaProvider>(config: Config, provider: string): Promise<T | null> {
+export function getMediaProvider<T extends MediaProvider>(provider: string): T | null {
 	return providers.media[provider] as T || null;
 }
 
-export async function getPrinterProvider<T extends PrinterProvider>(config: Config, provider: string): Promise<T | null> {
+export function getPrinterProvider<T extends PrinterProvider>(provider: string): T | null {
 	return providers.printer[provider] as T || null;
 }
 

@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/printer-html",
-	"version": "0.0.1-dev.5",
+	"version": "0.0.1-dev.6",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -11,7 +11,7 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.5",
+		"@doctool/plugin-api": "^0.0.1-dev.6",
 		"prettier": "^2.2.1",
 		"sass": "^1.32.6"
 	},

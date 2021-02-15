@@ -1,14 +1,13 @@
 import deepmerge from 'deepmerge';
 import fs from 'fs/promises';
-import fsSync from 'fs';
 import path from 'path';
-import { RenderContext, ContentRenderContext, PrinterSource } from '@doctool/plugin-api';
+import { ContentRenderContext, PrinterSource } from '@doctool/plugin-api';
 import { Config, Document, DataObject } from './config/config';
 import { defaultConfig } from './config/default';
-import { Directory } from '@doctool/plugin-api/lib/common';
 import { findFile } from './utils/io';
 import { readYaml } from './utils/yaml';
 import { getContentProvider, getPrinterProvider, validatePlugins } from './plugins';
+import { CoreRenderContext } from './coreRenderContext';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
 	const config = await readYaml<Config>(location);
@@ -64,28 +63,7 @@ export async function buildDocuments(config: Config): Promise<void> {
 	}
 }
 
-export function createContext(config: Config, document: Document, data: DataObject): RenderContext {
-	let basePath = config.workingDirectory;
-	if (config.directories.namespaces && document.namespace) basePath = path.resolve(basePath, document.namespace);
-
-	return {
-		resolvePath: (type: Directory, name: string) => {
-			if (name.startsWith('#')) return name;
-			const location = path.resolve(basePath, config.directories[type], name);
-			if (fsSync.existsSync(location)) return location;
-
-			if (config.directories.namespaces && config.directories.shared) {
-				const sharedLocation = path.resolve(config.workingDirectory, config.directories.shared, config.directories[type], name);
-				if (fsSync.existsSync(sharedLocation)) return sharedLocation;
-			}
-
-			throw new Error(`Could not solve path ${type}/${name}.`);
-		},
-		renderContent: (name: string) => renderContent(config, document, name, data)
-	};
-}
-
-async function renderContent(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> {
+export async function renderContent(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> {
 	const [contentPath, templatePath] = await Promise.all([
 		findFile(config, document, config.directories.content, name),
 		findFile(config, document, config.directories.template, name),
@@ -99,7 +77,7 @@ async function renderContent(config: Config, document: Document, name: string, d
 	if (!provider) throw new Error(`No content provider found for ${extension}`);
 
 	// TODO add file-hashing magic and caching
-	const context: ContentRenderContext = createContext(config, document, data);
+	const context: ContentRenderContext = new CoreRenderContext(config, usedPath, document, data);
 	const rendered = await provider.render(context, usedPath, await fs.readFile(usedPath), data);
 	return rendered;
 }
@@ -118,7 +96,7 @@ export async function buildDocument(config: Config, documentName: string, docume
 	if (!provider) throw new Error(`No printer provider found for ${documentConfig.printer}`);
 
 	// TODO Custom context? don't need render functions right?
-	const context: ContentRenderContext = createContext(config, documentConfig, documentConfig.with);
+	const context: ContentRenderContext = new CoreRenderContext(config, null, documentConfig, documentConfig.with);
 	const rendered = await provider.render(context, sources, documentConfig.with);
 	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
 

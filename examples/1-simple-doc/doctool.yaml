@@ -1,10 +1,10 @@
 plugins:
-  - '@doctool/template-nunjucks'
+  - '@doctool/content-nunjucks'
   - '@doctool/content-marked'
   - '@doctool/content-asciidoctor'
   - '@doctool/printer-html'
   - '@doctool/printer-weasyprint'
-  # - '@doctool/template-toc'
+  # - '@doctool/content-toc'
 
 .document: &document
   !import document.yaml

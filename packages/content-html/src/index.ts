@@ -1,11 +1,11 @@
-import { TemplateProvider, PluginValues, TemplateRenderContext } from '@doctool/plugin-api';
+import { ContentProvider, PluginValues, ContentRenderContext } from '@doctool/plugin-api';
 import RewritingStream from 'parse5-html-rewriting-stream';
 
 const rewriteHref = ['a', 'area', 'base', 'link'];
 const rewriteSrc = ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'];
 
-export class HtmlTemplateProvider implements TemplateProvider {
-	async render<T extends object>(context: TemplateRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
+export class HtmlContentProvider implements ContentProvider {
+	async render<T extends object>(context: ContentRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
 		const rewriter = new RewritingStream();
 		const resultPromise: Promise<Buffer> = new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
@@ -60,8 +60,8 @@ export class HtmlTemplateProvider implements TemplateProvider {
 
 export default async function(): Promise<PluginValues> {
 	return {
-		templateProviders: {
-			'.html': new HtmlTemplateProvider()
+		contentProviders: {
+			'.html': new HtmlContentProvider()
 		}
 	}
 }

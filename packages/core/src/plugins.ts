@@ -1,14 +1,12 @@
-import { TemplateProvider, ContentProvider, PrinterProvider, PluginValues } from '@doctool/plugin-api';
+import { ContentProvider, PrinterProvider, PluginValues } from '@doctool/plugin-api';
 import path from 'path';
 import { Config } from './config/config';
 
 const loadedPlugins: string[] = [];
 const providers: {
-	template: { [key: string]: TemplateProvider },
 	content: { [key: string]: ContentProvider },
 	printer: { [key: string]: PrinterProvider }
 } = {
-	template: {},
 	content: {},
 	printer: {}
 };
@@ -19,10 +17,6 @@ export async function validatePlugins(config: Config): Promise<void> {
 			await loadPlugin(config, id);
 		}
 	}
-}
-
-export async function getTemplateProvider<T extends TemplateProvider>(config: Config, provider: string): Promise<T | null> {
-	return providers.template[provider] as T || null;
 }
 
 export async function getContentProvider<T extends ContentProvider>(config: Config, provider: string): Promise<T | null> {
@@ -52,10 +46,6 @@ export async function loadPlugin(config: Config, id: string) {
 	const plugin = await import(location).then(module => module?.default);
 	let values: PluginValues = {};
 	if (typeof plugin === 'function') values = await plugin();
-
-	Object.entries(values.templateProviders || {}).forEach(([extension, provider]) => {
-		providers.template[extension] = provider;
-	});
 
 	Object.entries(values.contentProviders || {}).forEach(([extension, provider]) => {
 		providers.content[extension] = provider;

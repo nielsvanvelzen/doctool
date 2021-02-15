@@ -13,6 +13,6 @@
 		"@doctool/content-marked": "^0.0.1-dev.5",
 		"@doctool/printer-html": "^0.0.1-dev.5",
 		"@doctool/printer-weasyprint": "^0.0.1-dev.5",
-		"@doctool/template-handlebars": "^0.0.1-dev.5"
+		"@doctool/content-handlebars": "^0.0.1-dev.5"
 	}
 }

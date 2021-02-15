@@ -1,8 +1,8 @@
-import { TemplateProvider, PluginValues, TemplateRenderContext } from '@doctool/plugin-api';
+import { ContentProvider, PluginValues, ContentRenderContext } from '@doctool/plugin-api';
 import nunjucks from 'nunjucks';
 
-export class NunjucksTemplateProvider implements TemplateProvider {
-	async render<T extends object>(context: TemplateRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
+export class NunjucksContentProvider implements ContentProvider {
+	async render<T extends object>(context: ContentRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
 		const env = new nunjucks.Environment();
 		env.addFilter('renderContent', (name: string, callback: nunjucks.Callback<string, nunjucks.runtime.SafeString>) => {
 			context.renderContent(name)
@@ -22,8 +22,8 @@ export class NunjucksTemplateProvider implements TemplateProvider {
 
 export default async function(): Promise<PluginValues> {
 	return {
-		templateProviders: {
-			'.njk': new NunjucksTemplateProvider()
+		contentProviders: {
+			'.njk': new NunjucksContentProvider()
 		}
 	}
 }

@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@doctool/plugin-api": "^0.0.1-dev.5",
+		"@doctool/content-html": "^0.0.1-dev.5",
 		"nunjucks": "^3.2.2"
 	},
 	"devDependencies": {

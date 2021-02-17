@@ -9,19 +9,18 @@ plugins:
 .document: &document
   !import document.yaml
 
-.html-options: &html-options
-  title: Simple document
-  css:
-    - document.css
-
 documents:
   simple-doc-html:
     printer: html
     file: simple-doc-html
-    with: *html-options
+    title: Simple document
+    css:
+      - document.css
     document: *document
   simple-doc-weasyprint:
     printer: weasyprint
     file: simple-doc-weasyprint
-    with: *html-options
+    title: Simple document
+    css:
+      - document.css
     document: *document

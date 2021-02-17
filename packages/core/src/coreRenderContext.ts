@@ -104,6 +104,9 @@ export class CoreRenderContext implements RenderContext {
 	}
 
 	async awaitAll() {
-		await Promise.all(this.promises);
+		const promises = this.promises.slice();
+		this.promises = [];
+		
+		await Promise.all(promises);
 	}
 }

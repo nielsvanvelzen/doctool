@@ -12,5 +12,5 @@ export interface PrinterSource {
 export interface PrinterProvider extends Provider {
 	readonly defaultExtension: string
 
-	render<T extends object>(context: PrinterRenderContext, sources: PrinterSource[], data: T): Promise<Buffer>
+	render<T extends object>(context: PrinterRenderContext, source: Buffer, data: T): Promise<Buffer>
 }

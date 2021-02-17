@@ -9,6 +9,8 @@ export interface DocumentPart {
 export type Document = {
 	namespace?: string,
 	file: string,
+	title?: string,
+	css?: string | string[],
 	printer: string,
 	with: DataObject,
 	document: DocumentPart[]

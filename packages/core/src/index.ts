@@ -9,6 +9,7 @@ import { readYaml } from './utils/yaml';
 import { getContentProvider, getMediaProvider, getPrinterProvider, validatePlugins } from './plugins';
 import { CoreRenderContext } from './coreRenderContext';
 import { createHash } from 'crypto';
+import escapeHtml from 'escape-html';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
 	const config = await readYaml<Config>(location);
@@ -110,25 +111,44 @@ export function renderMedia(config: Config, document: Document, origin: string |
 	};
 }
 
-export async function buildDocument(config: Config, documentName: string, documentConfig: Document): Promise<void> {
+export async function buildDocument(config: Config, documentName: string, document: Document): Promise<void> {
 	console.info(`Building ${documentName}`);
 
-	const sources: PrinterSource[] = await Promise.all(documentConfig.document.map(async part => {
+	const provider = getPrinterProvider(document.printer);
+	if (!provider) throw new Error(`No printer provider found named ${document.printer}`);
+
+	// TODO Custom context? don't need render functions right?
+	const context = new CoreRenderContext(config, null, document, document.with);
+
+	// Get HTML parts
+	const sources: PrinterSource[] = await Promise.all(document.document.map(async part => {
 		return {
 			name: part.template,
-			content: await renderContent(config, documentConfig, part.template, part.with)
+			content: await renderContent(config, document, part.template, part.with)
 		};
 	}));
 
-	const provider = getPrinterProvider(documentConfig.printer);
-	if (!provider) throw new Error(`No printer provider found for ${documentConfig.printer}`);
+	// Create HTML document
+	let head: string[] = [];
 
-	// TODO Custom context? don't need render functions right?
-	const context = new CoreRenderContext(config, null, documentConfig, documentConfig.with);
-	const rendered = await provider.render(context, sources, documentConfig.with);
+	if (document.title) head.push(`<title>${escapeHtml(document.title)}</title>`);
+	const css = typeof document.css == 'string' ? [document.css] : Array.isArray(document.css) ? document.css : [];
+	for (const href of css) {
+		head.push(`<link rel="stylesheet" href="${context.resolveUrl(href)}" />`);
+	}
+
+	let html = `<!DOCTYPE html>
+		<html>
+		<head>${head}</head>
+		<body>${sources.map(source => source.content.toString()).join('')}</body>
+		</html>
+	`;
+
+	await context.awaitAll();
+	const rendered = await provider.render(context, Buffer.from(html, 'utf-8'), document.with);
 	await context.awaitAll();
 
-	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, documentConfig.file);
+	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, document.file);
 
 	if (!path.extname(documentPath).length) {
 		let extension = provider.defaultExtension;

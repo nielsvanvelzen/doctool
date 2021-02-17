@@ -1,24 +1,14 @@
 import { PluginValues, PrinterProvider, PrinterRenderContext, PrinterSource } from '@doctool/plugin-api';
-import HtmlPrinterPlugin, { HtmlPrinterProvider, HtmlPrinterProviderData } from '@doctool/printer-html';
 import childProcess from 'child_process';
 
-export interface WeasyPrintPrinterProviderData extends HtmlPrinterProviderData {
+export interface WeasyPrintPrinterProviderData {
 	weasyprint?: string
 }
 
 export class WeasyPrintPrinterProvider implements PrinterProvider {
 	readonly defaultExtension: string = 'pdf';
-	
-	private readonly htmlPrinterProvider: HtmlPrinterProvider;
 
-	constructor(htmlPrinterProvider: HtmlPrinterProvider) {
-		this.htmlPrinterProvider = htmlPrinterProvider;
-	}
-
-	async render(context: PrinterRenderContext, sources: PrinterSource[], data: WeasyPrintPrinterProviderData): Promise<Buffer> {
-		const html = await this.htmlPrinterProvider.render(context, sources, data);
-		await context.awaitAll();
-		
+	async render(context: PrinterRenderContext, source: Buffer, data: WeasyPrintPrinterProviderData): Promise<Buffer> {
 		const bin = data.weasyprint || 'weasyprint';
 	
 		return new Promise((resolve, reject) => {
@@ -41,18 +31,15 @@ export class WeasyPrintPrinterProvider implements PrinterProvider {
 			child.on('error', err => reject(err));
 			
 			child.stdin.on('error', err => reject(err));
-			child.stdin.end(html, 'utf-8');
+			child.stdin.end(source, 'utf-8');
 		});
 	}
 }
 
 export default async function (): Promise<PluginValues> {
-	const htmlPrinterPlugin = await HtmlPrinterPlugin();
-	const htmlPrinterProvider = htmlPrinterPlugin.printerProviders!['html'] as HtmlPrinterProvider;
-		
 	return {
 		printerProviders: {
-			'weasyprint': new WeasyPrintPrinterProvider(htmlPrinterProvider)
+			'weasyprint': new WeasyPrintPrinterProvider()
 		}
 	}
 }

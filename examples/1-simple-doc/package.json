@@ -13,6 +13,7 @@
 		"@doctool/content-handlebars": "^0.0.1-dev.7",
 		"@doctool/content-remark": "^0.0.1-dev.7",
 		"@doctool/printer-html": "^0.0.1-dev.7",
-		"@doctool/printer-weasyprint": "^0.0.1-dev.7"
+		"@doctool/printer-weasyprint": "^0.0.1-dev.7",
+		"@doctool/media-sass": "^0.0.1-dev.7"
 	}
 }

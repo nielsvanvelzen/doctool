@@ -4,6 +4,7 @@ plugins:
   - '@doctool/content-asciidoctor'
   - '@doctool/printer-html'
   - '@doctool/printer-weasyprint'
+  - '@doctool/media-sass'
   # - '@doctool/content-toc'
 
 .document: &document
@@ -15,12 +16,12 @@ documents:
     file: simple-doc-html
     title: Simple document
     css:
-      - document.css
+      - document.scss
     document: *document
   simple-doc-weasyprint:
     printer: weasyprint
     file: simple-doc-weasyprint
     title: Simple document
     css:
-      - document.css
+      - document.scss
     document: *document

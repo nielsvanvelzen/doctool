@@ -17,6 +17,8 @@ export class WeasyPrintPrinterProvider implements PrinterProvider {
 
 	async render(context: PrinterRenderContext, sources: PrinterSource[], data: WeasyPrintPrinterProviderData): Promise<Buffer> {
 		const html = await this.htmlPrinterProvider.render(context, sources, data);
+		await context.awaitAll();
+		
 		const bin = data.weasyprint || 'weasyprint';
 	
 		return new Promise((resolve, reject) => {

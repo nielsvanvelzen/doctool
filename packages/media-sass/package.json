@@ -1,5 +1,5 @@
 {
-	"name": "@doctool/printer-html",
+	"name": "@doctool/media-sass",
 	"version": "0.0.1-dev.7",
 	"license": "MIT",
 	"main": "lib/index.js",
@@ -12,9 +12,9 @@
 	},
 	"dependencies": {
 		"@doctool/plugin-api": "^0.0.1-dev.7",
-		"prettier": "^2.2.1"
+		"sass": "^1.32.6"
 	},
 	"devDependencies": {
-		"@types/prettier": "^2.1.6"
+		"@types/sass": "^1.16.0"
 	}
 }

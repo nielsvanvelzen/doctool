@@ -1,8 +1,5 @@
 import { PluginValues, PrinterProvider, PrinterRenderContext, PrinterSource } from '@doctool/plugin-api';
 import prettier from 'prettier';
-import sass from 'sass';
-import url from 'url';
-import path from 'path';
 import escapeHtml from 'escape-html';
 
 export interface HtmlPrinterProviderData {
@@ -13,32 +10,11 @@ export interface HtmlPrinterProviderData {
 export class HtmlPrinterProvider implements PrinterProvider {
 	readonly defaultExtension: string = 'html';
 
-	private async renderCss(location: string): Promise<string> {
-		if (location.endsWith('.scss')) {
-			const result = sass.renderSync({
-				file: location,
-				functions: {
-					'url($url)': (relativeUrl) => {
-						if (!(relativeUrl instanceof sass.types.String))
-							throw '$url: Expected a string.';
-
-						const absoluteUrl = url.pathToFileURL(path.resolve(path.dirname(location), relativeUrl.getValue()));
-						return new sass.types.String(`url('${absoluteUrl}')`);
-					}
-				}
-			});
-
-			return `<style>${result.css}</style>`;
-		}
-
-		return `<link rel="stylesheet" href="${url.pathToFileURL(location)}" />`;
-	}
-
-	private async renderLayout(title: string | null, css: string[], body: string): Promise<string> {
+	private async renderLayout(context: PrinterRenderContext, title: string | null, css: string[], body: string): Promise<string> {
 		let head = '';
 
 		if (title) head += `<title>${escapeHtml(title)}</title>`;
-		for (const href of css) head += await this.renderCss(href);
+		for (const href of css) head += `<link rel="stylesheet" href="${context.resolveUrl(href)}" />`;;
 
 		return `<!DOCTYPE html>
 			<html>
@@ -59,9 +35,9 @@ export class HtmlPrinterProvider implements PrinterProvider {
 
 	async render(context: PrinterRenderContext, sources: PrinterSource[], data: HtmlPrinterProviderData): Promise<Buffer> {
 		const body = sources.map(source => source.content.toString()).join('');
-		const css = (typeof data.css == 'string' ? [data.css] : Array.isArray(data.css) ? data.css : []).map(href => context.resolvePath('asset', href));
+		const css = typeof data.css == 'string' ? [data.css] : Array.isArray(data.css) ? data.css : [];
 
-		let html = await this.renderLayout(data.title ?? null, css, body);
+		let html = await this.renderLayout(context, data.title ?? null, css, body);
 		html = this.format(html);
 
 		return Buffer.from(html, 'utf-8');

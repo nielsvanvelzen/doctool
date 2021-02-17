@@ -60,16 +60,18 @@ export class CoreRenderContext implements RenderContext {
 		return location;
 	}
 
-	resolveUrl(name: string): string {
+	resolveUrl(name: string, origin?: string | null): string {
 		// Fragment should not be resolved
 		if (name.startsWith('#')) return name;
+
+		if (!origin) origin = this.origin;
 
 		let candidate: URL | null = null;
 
 		if (isValidUrl(name)) candidate = new URL(name);
 
-		if (candidate == null && this.origin) {
-			const relativePath = path.resolve(this.origin, name);
+		if (candidate == null && origin) {
+			const relativePath = path.resolve(origin, name);
 			if (fsSync.existsSync(relativePath)) candidate =  url.pathToFileURL(relativePath);
 		}
 
@@ -81,7 +83,7 @@ export class CoreRenderContext implements RenderContext {
 		if (candidate != null) {
 			if (candidate.protocol == 'file:') {
 				try {
-					const { fileName, promise } = renderMedia(this.config, this.document, this.origin, url.fileURLToPath(candidate));
+					const { fileName, promise } = renderMedia(this.config, this.document, origin, url.fileURLToPath(candidate));
 					this.promises.push(promise);
 
 					candidate = url.pathToFileURL(fileName);

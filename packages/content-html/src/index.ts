@@ -1,8 +1,5 @@
 import { ContentProvider, PluginValues, ContentRenderContext } from '@doctool/plugin-api';
 import RewritingStream from 'parse5-html-rewriting-stream';
-import path from 'path';
-import fs from 'fs';
-import url, { URL } from 'url';
 
 const rewriteHref = ['a', 'area', 'base', 'link'];
 const rewriteSrc = ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'];
@@ -19,6 +16,7 @@ export class HtmlContentProvider implements ContentProvider {
 		});
 
 		rewriter.on('startTag', tag => {
+			// Rewrite urls
 			if (rewriteHref.includes(tag.tagName)) {
 				for (const attr of tag.attrs) {
 					if (attr.name == 'href') attr.value = context.resolveUrl(attr.value);
@@ -31,9 +29,11 @@ export class HtmlContentProvider implements ContentProvider {
 				}
 			}
 			
+			// Doctool elements
 			if (tag.tagName.startsWith('doctool:')) {
 				const tagName = tag.tagName.replace(/^doctool:/, '');
 
+				// doctool:data element
 				if (tag.selfClosing && tagName == 'data') {
 					const key = tag.attrs.find(it => it.name == 'key')?.value;
 					const element = tag.attrs.find(it => it.name == 'element')?.value;

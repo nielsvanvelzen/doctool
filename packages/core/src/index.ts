@@ -6,7 +6,7 @@ import { Config, Document, DataObject } from './config/config';
 import { defaultConfig } from './config/default';
 import { findFile } from './utils/io';
 import { readYaml } from './utils/yaml';
-import { getContentProvider, getMediaProvider, getPrinterProvider, validatePlugins } from './plugins';
+import { getContentProvider, getMediaProvider, getPostProvider, getPrinterProvider, validatePlugins } from './plugins';
 import { CoreRenderContext } from './coreRenderContext';
 import { createHash } from 'crypto';
 import escapeHtml from 'escape-html';
@@ -137,17 +137,29 @@ export async function buildDocument(config: Config, documentName: string, docume
 		head.push(`<link rel="stylesheet" href="${context.resolveUrl(href)}" />`);
 	}
 
-	let html = `<!DOCTYPE html>
+	let html = Buffer.from(`<!DOCTYPE html>
 		<html>
-		<head>${head}</head>
+		<head>${head.join('')}</head>
 		<body>${sources.map(source => source.content.toString()).join('')}</body>
 		</html>
-	`;
+	`, 'utf-8');
 
 	await context.awaitAll();
-	const rendered = await provider.render(context, Buffer.from(html, 'utf-8'), document.with);
+
+	// Run all post providers
+	for (const [postProviderName, postProviderData] of Object.entries(document.post)) {
+		const postProvider = getPostProvider(postProviderName);
+		if (!postProvider) throw new Error(`No post provider found named ${postProviderName}`);
+
+		html = await postProvider.render(context, html, postProviderData);
+		await context.awaitAll();
+	}
+
+	// Print
+	let rendered = await provider.render(context, html, document.with);
 	await context.awaitAll();
 
+	// Save
 	let documentPath = path.resolve(config.workingDirectory, config.directories.dist, document.file);
 
 	if (!path.extname(documentPath).length) {

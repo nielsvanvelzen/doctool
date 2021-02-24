@@ -1,4 +1,4 @@
-import { ContentProvider, MediaProvider, PrinterProvider, PluginValues } from '@doctool/plugin-api';
+import { ContentProvider, MediaProvider, PrinterProvider, PostProvider, PluginValues } from '@doctool/plugin-api';
 import path from 'path';
 import { Config } from './config/config';
 
@@ -6,11 +6,13 @@ const loadedPlugins: string[] = [];
 const providers: {
 	content: { [key: string]: ContentProvider },
 	media: { [key: string]: MediaProvider },
-	printer: { [key: string]: PrinterProvider }
+	printer: { [key: string]: PrinterProvider },
+	post: { [key: string]: PostProvider }
 } = {
 	content: {},
 	media: {},
-	printer: {}
+	printer: {},
+	post: {}
 };
 
 export async function validatePlugins(config: Config): Promise<void> {
@@ -31,6 +33,10 @@ export function getMediaProvider<T extends MediaProvider>(provider: string): T |
 
 export function getPrinterProvider<T extends PrinterProvider>(provider: string): T | null {
 	return providers.printer[provider] as T || null;
+}
+
+export function getPostProvider<T extends PostProvider>(provider: string): T | null {
+	return providers.post[provider] as T || null;
 }
 
 export async function loadPlugin(config: Config, id: string) {
@@ -63,6 +69,10 @@ export async function loadPlugin(config: Config, id: string) {
 
 	Object.entries(values.printerProviders || {}).forEach(([name, provider]) => {
 		providers.printer[name] = provider;
+	});
+
+	Object.entries(values.postProviders || {}).forEach(([name, provider]) => {
+		providers.post[name] = provider;
 	});
 
 	loadedPlugins.push(id);

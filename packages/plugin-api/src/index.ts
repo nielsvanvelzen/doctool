@@ -2,6 +2,7 @@ import { RenderContext, Provider } from './common';
 import { PluginValues } from './plugin';
 import { ContentRenderContext, ContentProvider } from './content';
 import { MediaRenderContext, MediaProvider } from './media';
+import { PostRenderContext, PostProvider } from './post';
 import { PrinterRenderContext, PrinterSource, PrinterProvider } from './printers';
 
 export {
@@ -19,6 +20,10 @@ export {
 	// Media
 	MediaRenderContext,
 	MediaProvider,
+
+	// Post
+	PostRenderContext,
+	PostProvider,
 
 	// Printer
 	PrinterRenderContext,

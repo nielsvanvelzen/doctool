@@ -13,6 +13,9 @@ export type Document = {
 	css?: string | string[],
 	printer: string,
 	with: DataObject,
+	post: {
+		[key: string]: DataObject
+	},
 	document: DocumentPart[]
 };
 

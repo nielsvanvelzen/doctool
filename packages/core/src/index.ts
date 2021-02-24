@@ -130,8 +130,7 @@ export async function buildDocument(config: Config, documentName: string, docume
 
 	// Create HTML document
 	let head: string[] = [];
-
-	if (document.title) head.push(`<title>${escapeHtml(document.title)}</title>`);
+	
 	const css = typeof document.css == 'string' ? [document.css] : Array.isArray(document.css) ? document.css : [];
 	for (const href of css) {
 		head.push(`<link rel="stylesheet" href="${context.resolveUrl(href)}" />`);

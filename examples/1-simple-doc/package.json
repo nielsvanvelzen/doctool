@@ -14,6 +14,7 @@
 		"@doctool/content-remark": "^0.0.1-dev.8",
 		"@doctool/media-sass": "^0.0.1-dev.8",
 		"@doctool/printer-html": "^0.0.1-dev.8",
-		"@doctool/printer-weasyprint": "^0.0.1-dev.8"
+		"@doctool/printer-weasyprint": "^0.0.1-dev.8",
+		"@doctool/post-metadata": "^0.0.1-dev.8"
 	}
 }

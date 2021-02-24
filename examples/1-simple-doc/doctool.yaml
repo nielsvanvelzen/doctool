@@ -5,23 +5,23 @@ plugins:
   - '@doctool/printer-html'
   - '@doctool/printer-weasyprint'
   - '@doctool/media-sass'
-  # - '@doctool/content-toc'
+  - '@doctool/post-metadata'
 
 .document: &document
-  !import document.yaml
+  document: !import document.yaml
+  css:
+    - document.scss
+  post:
+    metadata:
+      title: Simple document
+      author: Doctool Contributors
 
 documents:
   simple-doc-html:
+    <<: *document
     printer: html
     file: simple-doc-html
-    title: Simple document
-    css:
-      - document.scss
-    document: *document
   simple-doc-weasyprint:
+    <<: *document
     printer: weasyprint
     file: simple-doc-weasyprint
-    title: Simple document
-    css:
-      - document.scss
-    document: *document

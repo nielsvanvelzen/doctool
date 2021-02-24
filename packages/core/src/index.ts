@@ -9,7 +9,6 @@ import { readYaml } from './utils/yaml';
 import { getContentProvider, getMediaProvider, getPostProvider, getPrinterProvider, validatePlugins } from './plugins';
 import { CoreRenderContext } from './coreRenderContext';
 import { createHash } from 'crypto';
-import escapeHtml from 'escape-html';
 
 export async function readConfig(workingDirectory: string, location: string): Promise<Config> {
 	const config = await readYaml<Config>(location);
@@ -21,6 +20,7 @@ export async function readConfig(workingDirectory: string, location: string): Pr
 	Object.entries(mergedConfig.documents).forEach(([name, document]) => {
 		if (!document.namespace) document.namespace = name;
 		if (!document.with) document.with = {};
+		if (!document.post) document.post = {};
 	});
 
 	return mergedConfig;

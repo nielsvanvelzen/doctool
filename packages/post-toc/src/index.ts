@@ -15,8 +15,12 @@ interface TableOfContentsEntry {
 	entries: TableOfContentsEntry[]
 }
 
+export interface TableOfContentsPostProviderData {
+	labels?: boolean
+}
+
 export class TableOfContentsPostProvider implements PostProvider {
-	async renderHeadings(source: Buffer, data: any): Promise<{ result: Buffer, toc: TableOfContentsEntry | null }> {
+	async renderHeadings(source: Buffer, data: TableOfContentsPostProviderData): Promise<{ result: Buffer, toc: TableOfContentsEntry | null }> {
 		let idCounter = 0;
 		let toc: TableOfContentsEntry | null = null;
 		let currentEntry: TableOfContentsEntry | null = null;
@@ -38,7 +42,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 			else if (tag.tagName == 'h4') depth = 4;
 			else if (tag.tagName == 'h5') depth = 5;
 			else if (tag.tagName == 'h6') depth = 6;
-			
+
 			if (!depth) return rewriter.emitStartTag(tag);
 
 			// Get id for element
@@ -56,7 +60,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 			else if (visibilityStr == 'hidden-entries') visibility = TableOfContentsEntryVisibility.hiddenEntries;
 
 			const entry: TableOfContentsEntry = { id, depth, text: '', entries: [], visibility };
-			
+
 			// Heading 1 resets the TOC
 			if (entry.depth == 1) {
 				toc = entry;
@@ -97,7 +101,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 		return resultPromise;
 	}
 
-	async renderToc(source: Buffer, toc: TableOfContentsEntry, data: any): Promise<Buffer> {
+	async renderToc(source: Buffer, toc: TableOfContentsEntry, data: TableOfContentsPostProviderData): Promise<Buffer> {
 		const rewriter = new RewritingStream();
 		const resultPromise: Promise<Buffer> = new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
@@ -153,7 +157,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 					],
 					selfClosing: false
 				});
-				rewriter.emitText({ text: entry.text });
+				if (data.labels !== false) rewriter.emitText({ text: entry.text });
 				rewriter.emitEndTag({ tagName: `span` });
 				rewriter.emitStartTag({
 					tagName: 'span',
@@ -193,7 +197,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 		return resultPromise;
 	}
 
-	async render(context: PostRenderContext, source: Buffer, data: any): Promise<Buffer> {
+	async render(context: PostRenderContext, source: Buffer, data: TableOfContentsPostProviderData): Promise<Buffer> {
 		let { result, toc } = await this.renderHeadings(source, data);
 
 		if (toc != null) result = await this.renderToc(result, toc, data);
@@ -202,7 +206,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 	}
 }
 
-export default async function(): Promise<PluginValues> {
+export default async function (): Promise<PluginValues> {
 	return {
 		postProviders: {
 			'toc': new TableOfContentsPostProvider(),

@@ -1,134 +1,94 @@
 import { PluginValues, PostProvider, PostRenderContext } from '@doctool/plugin-api';
-import parse5, { DocumentFragment, ParentNode, Node, Element, TextNode } from 'parse5';
+import parse5, { DocumentFragment } from 'parse5';
 import adapter from 'parse5/lib/tree-adapters/default';
-
-interface ReferencesDictionary {
-	[key: string]: string
-}
+import { createTextNode, getAttribute, getText, setAttribute, visit } from './parse5Utils';
 
 export interface ReferencesPostProviderData {
-	// categories
-	[key: string]: ReferencesDictionary
+	[key: string]: { [key: string]: string }
 }
 
 export class ReferencesPostProvider implements PostProvider {
-	visit(node: Node, callback: (el: Element) => void) {
-		const el = node as Element;
-		const childs = el.childNodes || [];
-
-		if (!node.nodeName.startsWith('#')) callback(el);
-
-		for (const child of childs) this.visit(child, callback);
+	getReferenceSlug(reference: string) {
+		return 'doctool-reference-' + reference.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 	}
 
-	getText(el: Element): string {
-		const parts: string[] = [];
+	transformReferences(fragment: DocumentFragment, data: ReferencesPostProviderData): string[] {
+		const usedReferences: string[] = [];
 
-		for (const node of el.childNodes) {
-			if (node.nodeName == '#text') parts.push((node as TextNode).value);
-			else if (!node.nodeName.startsWith('#')) parts.push(this.getText(node as Element));
-		}
+		visit(fragment, element => {
+			if (element.tagName !== 'abbr') return;
 
-		return parts.join('');
-	}
+			// Get reference name
+			let reference = getAttribute(element, 'href') ?? getText(element);
+			if (reference.startsWith('#')) reference = reference.substr(1);
+			reference = reference.toLowerCase();
 
-	getAttribute(el: Element, name: string): string | null {
-		const attr = el.attrs.find(attr => attr.name == name);
+			// Add to list of known references
+			if (!usedReferences.includes(reference)) usedReferences.push(reference);
 
-		if (attr) return attr.value;
-		else return null;
-	}
+			// Replace element
+			element.tagName = 'a';
+			setAttribute(element, 'href', `#${this.getReferenceSlug(reference)}`);
 
-	setAttribute(el: Element, name: string, value: string): void {
-		const attr = el.attrs.find(attr => attr.name == name);
-
-		if (attr) attr.value = value;
-		else el.attrs.push({ name, value });
-	}
-
-	createTextNode(parent: ParentNode, text: string): TextNode {
-		return {
-			nodeName: '#text',
-			value: text,
-			parentNode: parent
-		};
-	}
-
-	transformReferences(source: Buffer, data: ReferencesPostProviderData): { fragment: DocumentFragment, usedReferences: ReferencesDictionary | null } {
-		let usedReferences: ReferencesDictionary | null = null;
-		const fragment = parse5.parseFragment(source.toString());
-
-		this.visit(fragment, element => {
-			if (element.nodeName == 'abbr') {
-				const title = this.getAttribute(element, 'title');
-				const reference = this.getAttribute(element, 'href') ?? this.getText(element);
-
-				if (usedReferences == null) usedReferences = {};
-
-				usedReferences[reference] = usedReferences[reference] || title || '';
-
-				element.tagName = 'a';
-				this.setAttribute(element, 'href', '#' + encodeURIComponent(reference));
-
-				const cls = this.getAttribute(element, 'class') ?? '';
-				this.setAttribute(element, 'class', cls ? `${cls} abbr` : 'abbr');
-			}
+			// Append class
+			const cls = (getAttribute(element, 'class') ?? '').split(' ');
+			if (!cls.includes('doctool-reference')) cls.push('doctool-reference');
+			setAttribute(element, 'class', cls.join(' '));
 		});
 
-		return {
-			fragment,
-			usedReferences
-		};
+		return usedReferences;
 	}
 
-	transformIndexes(fragment: DocumentFragment, usedReferences: ReferencesDictionary, data: ReferencesPostProviderData): Buffer {
-		this.visit(fragment, element => {
-			if (element.tagName === 'doctool:references') {
-				const type = this.getAttribute(element, 'type') ?? '*';
+	transformIndexes(fragment: DocumentFragment, usedReferences: string[], data: ReferencesPostProviderData): void {
+		const generatedReferences: string[] = [];
 
-				element.tagName = 'ul';
-				element.childNodes = [];
+		visit(fragment, element => {
+			if (element.tagName !== 'doctool:references') return;
 
-				for (const [reference, inlineDescription] of Object.entries(usedReferences)) {
-					let definition = { reference, description: inlineDescription };
-					if (!definition.description && type in data) {
-						let search = Object.entries(data[type]).find(([key, _]) => key.toLowerCase() == reference.toLowerCase());
-						
-						if (search) {
-							let [reference, description] = search;
-							definition = { reference, description };
-						}
-					}
+			const type = getAttribute(element, 'type') ?? '*';
+			const references: { [key: string]: string } = {};
 
-					// No description, skip
-					if (!definition.description) continue;
-
-					const li = adapter.createElement('li', element.namespaceURI, []);
-					this.setAttribute(li, 'id', encodeURIComponent(reference));
-					element.childNodes.push(li);
-
-					const p = adapter.createElement('p', element.namespaceURI, []);
-					li.childNodes.push(p);
-
-					const strong = adapter.createElement('strong', element.namespaceURI, []);
-					strong.childNodes.push(this.createTextNode(strong, definition.reference));
-					p.childNodes.push(strong);
-					p.childNodes.push(adapter.createElement('br', element.namespaceURI, []));
-					p.childNodes.push(this.createTextNode(p, definition.description));
+			// Retrieve all references from requested type that are used in the document
+			for (const [reference, description] of Object.entries(data[type] || {})) {
+				if (usedReferences.includes(reference.toLowerCase())) {
+					references[reference] = description;
+					generatedReferences.push(reference.toLowerCase());
 				}
 			}
+
+			element.tagName = 'ul';
+			element.childNodes = [];
+
+			for (const [reference, description] of Object.entries(references)) {
+				const li = adapter.createElement('li', element.namespaceURI, []);
+				setAttribute(li, 'id', this.getReferenceSlug(reference));
+				element.childNodes.push(li);
+
+				const p = adapter.createElement('p', element.namespaceURI, []);
+				li.childNodes.push(p);
+
+				const strong = adapter.createElement('strong', element.namespaceURI, []);
+				strong.childNodes.push(createTextNode(strong, reference));
+				p.childNodes.push(strong);
+				p.childNodes.push(adapter.createElement('br', element.namespaceURI, []));
+				p.childNodes.push(createTextNode(p, description));
+			}
 		});
 
-		return Buffer.from(parse5.serialize(fragment), 'utf-8');
+		for (const reference of usedReferences) {
+			if (!generatedReferences.includes(reference)) {
+				console.warn(`Reference ${reference} not found in definitions!`);
+			}
+		}
 	}
 
 	async render(context: PostRenderContext, source: Buffer, data: ReferencesPostProviderData): Promise<Buffer> {
-		let { fragment, usedReferences } = this.transformReferences(source, data);
+		const fragment = parse5.parseFragment(source.toString());
 
-		let result = source;
-		if (usedReferences != null) result = this.transformIndexes(fragment, usedReferences, data);
+		const usedReferences = this.transformReferences(fragment, data);
+		this.transformIndexes(fragment, usedReferences, data);
 
-		return result;
+		return Buffer.from(parse5.serialize(fragment), 'utf-8');
 	}
 }
 

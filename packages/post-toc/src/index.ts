@@ -1,10 +1,17 @@
 import { PluginValues, PostProvider, PostRenderContext } from '@doctool/plugin-api';
 import RewritingStream from 'parse5-html-rewriting-stream';
 
+enum TableOfContentsEntryVisibility {
+	visible,
+	hidden,
+	hiddenEntries,
+}
+
 interface TableOfContentsEntry {
 	id: string,
 	depth: number, // 1 - 6
-	visibility: 'visible' | 'hidden' | 'hidden-entries'
+	text: string,
+	visibility: TableOfContentsEntryVisibility
 	entries: TableOfContentsEntry[]
 }
 
@@ -12,6 +19,7 @@ export class TableOfContentsPostProvider implements PostProvider {
 	async renderHeadings(source: Buffer, data: any): Promise<{ result: Buffer, toc: TableOfContentsEntry | null }> {
 		let idCounter = 0;
 		let toc: TableOfContentsEntry | null = null;
+		let currentEntry: TableOfContentsEntry | null = null;
 
 		const rewriter = new RewritingStream();
 		const resultPromise: Promise<{ result: Buffer, toc: TableOfContentsEntry | null }> = new Promise((resolve, reject) => {
@@ -31,33 +39,57 @@ export class TableOfContentsPostProvider implements PostProvider {
 			else if (tag.tagName == 'h5') depth = 5;
 			else if (tag.tagName == 'h6') depth = 6;
 			
-			if (depth != null) {
-				let id = tag.attrs.find(it => it.name == 'id')?.value;
-				if (!id) {
-					id = `doctool-toc-${idCounter++}`;
-					tag.attrs.push({ name: 'id', value: id });
-				}
+			if (!depth) return rewriter.emitStartTag(tag);
 
-				const entry: TableOfContentsEntry = { id, depth, entries: [], visibility: 'visible' };
-				
-				if (entry.depth == 1) toc = entry;
-				else {
-					let parent = toc;
-					let currentDepth = 0;
-					while (currentDepth < entry.depth - 1) {
-						currentDepth++;
-
-						if (parent && parent.entries.length >= 1)
-							parent = parent.entries[parent.entries.length - 1];
-					}
-
-					parent?.entries.push(entry);
-				}
-
-				rewriter.emitStartTag(tag);
-			} else {
-				rewriter.emitStartTag(tag);
+			// Get id for element
+			let id = tag.attrs.find(it => it.name == 'id')?.value;
+			if (!id) {
+				// Create a new id
+				// TODO use text content
+				id = `doctool-toc-${idCounter++}`;
+				tag.attrs.push({ name: 'id', value: id });
 			}
+
+			let visibilityStr = tag.attrs.find(it => it.name == 'doctool:visibility' || it.name == 'visibility')?.value;
+			let visibility = TableOfContentsEntryVisibility.visible;
+			if (visibilityStr == 'hidden') visibility = TableOfContentsEntryVisibility.hidden;
+			else if (visibilityStr == 'hidden-entries') visibility = TableOfContentsEntryVisibility.hiddenEntries;
+
+			const entry: TableOfContentsEntry = { id, depth, text: '', entries: [], visibility };
+			
+			// Heading 1 resets the TOC
+			if (entry.depth == 1) {
+				toc = entry;
+			} else {
+				// Other depths append to their parent
+				let parent = toc;
+
+				for (let currentDepth = 1; currentDepth < entry.depth - 1; currentDepth++) {
+					if (parent && parent.entries.length >= 1)
+						parent = parent.entries[parent.entries.length - 1];
+					else break;
+				}
+
+				parent?.entries.push(entry);
+			}
+
+			// Set entry as current
+			currentEntry = entry;
+
+			rewriter.emitStartTag(tag);
+		});
+
+		rewriter.on('text', text => {
+			if (currentEntry) currentEntry.text += text.text;
+
+			rewriter.emitText(text);
+		})
+
+		rewriter.on('endTag', tag => {
+			// Close current entry
+			if (tag.tagName == `h${currentEntry?.depth}`) currentEntry = null;
+
+			rewriter.emitEndTag(tag);
 		});
 
 		rewriter.end(source.toString());
@@ -80,29 +112,65 @@ export class TableOfContentsPostProvider implements PostProvider {
 			if (!tag.selfClosing) throw '<doctool:toc /> should be self-closing!';
 
 			function renderEntry(entry: TableOfContentsEntry) {
+				// Don't render when visibility is hidden
+				if (entry.visibility == TableOfContentsEntryVisibility.hidden) return;
+
+				const defaultAttrs = [
+					{
+						name: 'data-reference',
+						value: entry.id
+					},
+					{
+						name: 'data-depth',
+						value: entry.depth.toString()
+					},
+					{
+						name: 'href',
+						value: `#${entry.id}`
+					}
+				];
+
 				// Title
 				rewriter.emitStartTag({
 					tagName: `a`,
 					attrs: [
+						...defaultAttrs,
 						{
-							name: 'href',
-							value: `#${entry.id}`
-						},
-						{
-							name: 'data-reference',
-							value: entry.id
-						},
-						{
-							name: 'data-depth',
-							value: entry.depth.toString()
+							name: 'class',
+							value: 'doctool-toc-entry-anchor'
 						}
 					],
 					selfClosing: false
 				});
+				rewriter.emitStartTag({
+					tagName: 'span',
+					attrs: [
+						...defaultAttrs,
+						{
+							name: 'class',
+							value: 'doctool-toc-entry-label'
+						}
+					],
+					selfClosing: false
+				});
+				rewriter.emitText({ text: entry.text });
+				rewriter.emitEndTag({ tagName: `span` });
+				rewriter.emitStartTag({
+					tagName: 'span',
+					attrs: [
+						...defaultAttrs,
+						{
+							name: 'class',
+							value: 'doctool-toc-entry-extra'
+						}
+					],
+					selfClosing: false
+				});
+				rewriter.emitEndTag({ tagName: `span` });
 				rewriter.emitEndTag({ tagName: `a` });
 
 				// Entries
-				if (entry.entries) {
+				if (entry.entries && entry.visibility != TableOfContentsEntryVisibility.hiddenEntries) {
 					rewriter.emitStartTag({ tagName: 'ul', attrs: [], selfClosing: false });
 					for (const subEntry of entry.entries) {
 						rewriter.emitStartTag({ tagName: 'li', attrs: [], selfClosing: false });

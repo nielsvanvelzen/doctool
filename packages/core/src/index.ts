@@ -150,7 +150,7 @@ export async function buildDocument(config: Config, documentName: string, docume
 		const postProvider = getPostProvider(postProviderName);
 		if (!postProvider) throw new Error(`No post provider found named ${postProviderName}`);
 
-		html = await postProvider.render(context, html, postProviderData);
+		html = await postProvider.render(context, html, postProviderData || {});
 		await context.awaitAll();
 	}
 

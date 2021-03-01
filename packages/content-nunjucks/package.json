@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/content-nunjucks",
-	"version": "0.0.1-dev.8",
+	"version": "0.0.1-dev.9",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -11,8 +11,8 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.8",
-		"@doctool/content-html": "^0.0.1-dev.8",
+		"@doctool/plugin-api": "^0.0.1-dev.9",
+		"@doctool/content-html": "^0.0.1-dev.9",
 		"nunjucks": "^3.2.2"
 	},
 	"devDependencies": {

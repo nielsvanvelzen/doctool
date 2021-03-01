@@ -6,6 +6,7 @@ plugins:
   - '@doctool/printer-weasyprint'
   - '@doctool/media-sass'
   - '@doctool/post-metadata'
+  - '@doctool/post-references'
 
 .document: &document
   document: !import document.yaml
@@ -15,6 +16,9 @@ plugins:
     metadata:
       title: Simple document
       author: Doctool Contributors
+    references:
+      abbreviations:
+        tbd: To be announced
 
 documents:
   simple-doc-html:

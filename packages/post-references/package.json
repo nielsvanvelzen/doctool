@@ -1,5 +1,5 @@
 {
-	"name": "@doctool/content-remark",
+	"name": "@doctool/post-references",
 	"version": "0.0.1-dev.8",
 	"license": "MIT",
 	"main": "lib/index.js",
@@ -12,11 +12,9 @@
 	},
 	"dependencies": {
 		"@doctool/plugin-api": "^0.0.1-dev.8",
-		"@doctool/content-html": "^0.0.1-dev.8",
-		"remark": "^13.0.0",
-		"remark-html": "^13.0.1",
-		"remark-gfm": "^1.0.0",
-		"unified": "^9.2.1",
-		"unist-util-visit": "^2.0.3"
+		"parse5": "^6.0.1"
+	},
+	"devDependencies": {
+		"@types/parse5": "^6.0.0"
 	}
 }

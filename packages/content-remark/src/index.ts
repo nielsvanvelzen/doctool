@@ -3,6 +3,7 @@ import HtmlContentPlugin, { HtmlContentProvider } from '@doctool/content-html';
 import remark from 'remark';
 import remarkHtml from 'remark-html';
 import remarkGfm from 'remark-gfm';
+import remarkHeadings from './remarkHeadings';
 import remarkReferences from './remarkReferences';
 
 export class RemarkContentProvider implements ContentProvider {
@@ -18,6 +19,7 @@ export class RemarkContentProvider implements ContentProvider {
 		processor.use(remarkHtml, {
 			sanitize: false
 		});
+		processor.use(remarkHeadings);
 		processor.use(remarkReferences);
 		const result = await processor.process(source);
 

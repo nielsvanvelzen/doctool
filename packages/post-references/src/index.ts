@@ -1,17 +1,17 @@
 import { PluginValues, PostProvider, PostRenderContext } from '@doctool/plugin-api';
-import parse5, { DocumentFragment } from 'parse5';
-import adapter from 'parse5/lib/tree-adapters/default';
-import { createTextNode, getAttribute, getText, setAttribute, visit } from './parse5Utils';
+import parse5, { DocumentFragment, Element } from 'parse5';
+import { getAttribute, getText, setAttribute, visit } from './parse5Utils';
+import { ReferenceMap, ReferencesPostProviderData } from './types';
+import { getReferenceSlug } from './utils';
+import { defaultStyle } from './style/default';
+import { apaStyle } from './style/apa';
 
-export interface ReferencesPostProviderData {
-	[key: string]: { [key: string]: string }
-}
+const styles: { [key: string]: (element: Element, references: ReferenceMap<any>) => void } = {
+	default: defaultStyle,
+	apa: apaStyle
+};
 
 export class ReferencesPostProvider implements PostProvider {
-	getReferenceSlug(reference: string) {
-		return 'doctool-reference-' + reference.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-	}
-
 	transformReferences(fragment: DocumentFragment, data: ReferencesPostProviderData): string[] {
 		const usedReferences: string[] = [];
 
@@ -28,7 +28,7 @@ export class ReferencesPostProvider implements PostProvider {
 
 			// Replace element
 			element.tagName = 'a';
-			setAttribute(element, 'href', `#${this.getReferenceSlug(reference)}`);
+			setAttribute(element, 'href', `#${getReferenceSlug(reference)}`);
 
 			// Append class
 			const cls = (getAttribute(element, 'class') ?? '').split(' ');
@@ -46,7 +46,8 @@ export class ReferencesPostProvider implements PostProvider {
 			if (element.tagName !== 'doctool:references') return;
 
 			const type = getAttribute(element, 'type') ?? '*';
-			const references: { [key: string]: string } = {};
+			const style = (getAttribute(element, 'style') ?? 'default').toLowerCase();
+			const references: ReferenceMap = {};
 
 			// Retrieve all references from requested type that are used in the document
 			for (const [reference, description] of Object.entries(data[type] || {})) {
@@ -56,23 +57,14 @@ export class ReferencesPostProvider implements PostProvider {
 				}
 			}
 
-			element.tagName = 'ul';
-			element.childNodes = [];
-
-			for (const [reference, description] of Object.entries(references)) {
-				const li = adapter.createElement('li', element.namespaceURI, []);
-				setAttribute(li, 'id', this.getReferenceSlug(reference));
-				element.childNodes.push(li);
-
-				const p = adapter.createElement('p', element.namespaceURI, []);
-				li.childNodes.push(p);
-
-				const strong = adapter.createElement('strong', element.namespaceURI, []);
-				strong.childNodes.push(createTextNode(strong, reference));
-				p.childNodes.push(strong);
-				p.childNodes.push(adapter.createElement('br', element.namespaceURI, []));
-				p.childNodes.push(createTextNode(p, description));
+			let useStyle = style;
+			if (!(style in styles)) {
+				console.warn(`Reference style ${style} not found. Valid styles are: ${Object.keys(styles).join(', ')}`);
+				// Fallback to default
+				useStyle = 'default';
 			}
+
+			styles[useStyle](element, references);
 		});
 
 		for (const reference of usedReferences) {

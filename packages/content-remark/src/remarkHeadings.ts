@@ -13,7 +13,10 @@ const remarkHeadings: Plugin = (options: any) => {
 			if (!selectorMatch) return;
 
 			const selector = selectorMatch[1];
-			const attributes: string[] = selector.split(/(?=#|\.)/).map((it: string) => it.trim());
+			const attributes: string[] = selector.split(/(?=#|\.|:)/).map((it: string) => it.trim());
+			const customAttributes = attributes.filter(it => it.startsWith(':'))
+				.map(it => it.substring(1).split((/=(.*)$/)))
+				.map(([key, value]) => ({ key, value }));
 			const className = attributes.filter(it => it.startsWith('.'))
 				.map(it => it.substring(1))
 				.join(' ');
@@ -24,6 +27,10 @@ const remarkHeadings: Plugin = (options: any) => {
 
 			if (!node.data) node.data = new Object();
 			if (!node.data.hProperties) node.data.hProperties = new Object();
+
+			for (const { key, value } of customAttributes) {
+				node.data.hProperties[key] = value;
+			}
 
 			if (id) {
 				node.data.id = id;

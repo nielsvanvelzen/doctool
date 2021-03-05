@@ -45,8 +45,13 @@ export class ReferencesPostProvider implements PostProvider {
 		visit(fragment, element => {
 			if (element.tagName !== 'doctool:references') return;
 
+			// Get attributes
 			const type = getAttribute(element, 'type') ?? '*';
-			const style = (getAttribute(element, 'style') ?? 'default').toLowerCase();
+			const style = (getAttribute(element, 'format') ?? 'default').toLowerCase();
+			// Remove custom attributes
+			setAttribute(element, 'type', null);
+			setAttribute(element, 'format', null);
+
 			const references: ReferenceMap = {};
 
 			// Retrieve all references from requested type that are used in the document

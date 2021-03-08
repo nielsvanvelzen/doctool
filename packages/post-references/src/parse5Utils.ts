@@ -29,7 +29,13 @@ export function getAttribute(element: Element, name: string): string | null {
 	else return null;
 }
 
-export function setAttribute(element: Element, name: string, value: string): void {
+export function setAttribute(element: Element, name: string, value: string | null): void {
+	// Remove attribute (if any) when value is null
+	if (value === null) {
+		element.attrs = element.attrs.filter(attr => attr.name != name);
+		return;
+	}
+
 	const attr = element.attrs.find(attr => attr.name == name);
 
 	if (attr) attr.value = value;

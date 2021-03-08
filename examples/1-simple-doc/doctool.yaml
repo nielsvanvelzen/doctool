@@ -18,7 +18,9 @@ plugins:
       author: Doctool Contributors
     references:
       abbreviations:
-        tbd: To be announced
+        style: default
+        definitions:
+          tbd: To be announced
 
 documents:
   simple-doc-html:

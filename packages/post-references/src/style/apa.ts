@@ -17,7 +17,7 @@ export class ApaStyle implements CitationStyle<Apa> {
 		setAttribute(element, 'class', cls.join(' '));
 
 		// Replace text
-		const authors = Array.isArray(definition.authors) ? definition.authors : [definition.authors].join(', ');
+		const authors = Array.isArray(definition.authors) ? definition.authors : [definition.authors].map(author => author?.split(', ')[0]).join(', ');
 		const year = definition.year;
 
 		element.childNodes = [

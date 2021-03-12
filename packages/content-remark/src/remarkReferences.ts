@@ -4,7 +4,7 @@ import visit from 'unist-util-visit';
 const remarkReferences: Plugin = (options: any) => {
 	options = options || {};
 
-	const regex = options.regex || /\*\[([-\w]+)\]/g;
+	const regex = options.regex || /\*\[([-\w\s]+)\]/g;
 
 	return (tree) => {
 		visit(tree, 'text', (node: any, index, parent) => {

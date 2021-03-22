@@ -60,9 +60,8 @@ export function getRelevantFiles(config: Config): { [key: string]: string } {
 export async function buildDocuments(config: Config): Promise<void> {
 	await validatePlugins(config);
 
-	for await (const [document, documentConfig] of Object.entries(config.documents)) {
-		buildDocument(config, document, documentConfig);
-	}
+	const promises = Object.entries(config.documents).map(([document, documentConfig]) => buildDocument(config, document, documentConfig));
+	await Promise.all(promises);
 }
 
 export async function renderContent(config: Config, document: Document, name: string, data: DataObject): Promise<Buffer> {

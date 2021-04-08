@@ -1,8 +1,9 @@
 import { PluginValues, ContentProvider, ContentRenderContext } from '@doctool/plugin-api';
 import HtmlContentPlugin, { HtmlContentProvider } from '@doctool/content-html';
 import remark from 'remark';
-import remarkHtml from 'remark-html';
 import remarkGfm from 'remark-gfm';
+import remarkHighlight from 'remark-highlight.js';
+import remarkHtml from 'remark-html';
 import remarkHeadings from './remarkHeadings';
 import remarkReferences from './remarkReferences';
 
@@ -16,6 +17,7 @@ export class RemarkContentProvider implements ContentProvider {
 	async render<T extends object>(context: ContentRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
 		const processor = remark();
 		processor.use(remarkGfm);
+		processor.use(remarkHighlight);
 		processor.use(remarkHtml, {
 			sanitize: false
 		});

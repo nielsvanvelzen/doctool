@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/printer-weasyprint",
-	"version": "0.0.1-dev.10",
+	"version": "0.0.1-dev.11",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -11,6 +11,6 @@
 		"build": "tsc -b tsconfig.json"
 	},
 	"dependencies": {
-		"@doctool/plugin-api": "^0.0.1-dev.10"
+		"@doctool/plugin-api": "^0.0.1-dev.11"
 	}
 }

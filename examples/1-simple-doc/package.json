@@ -1,6 +1,6 @@
 {
 	"name": "@doctool/simple-doc",
-	"version": "0.0.1-dev.10",
+	"version": "0.0.1-dev.11",
 	"private": true,
 	"scripts": {
 		"start": "yarn run watch",
@@ -8,13 +8,13 @@
 		"watch": "doctool watch"
 	},
 	"devDependencies": {
-		"@doctool/cli": "^0.0.1-dev.10",
-		"@doctool/content-asciidoctor": "^0.0.1-dev.10",
-		"@doctool/content-remark": "^0.0.1-dev.10",
-		"@doctool/media-sass": "^0.0.1-dev.10",
-		"@doctool/post-metadata": "^0.0.1-dev.10",
-		"@doctool/post-references": "^0.0.1-dev.10",
-		"@doctool/printer-html": "^0.0.1-dev.10",
-		"@doctool/printer-weasyprint": "^0.0.1-dev.10"
+		"@doctool/cli": "^0.0.1-dev.11",
+		"@doctool/content-asciidoctor": "^0.0.1-dev.11",
+		"@doctool/content-remark": "^0.0.1-dev.11",
+		"@doctool/media-sass": "^0.0.1-dev.11",
+		"@doctool/post-metadata": "^0.0.1-dev.11",
+		"@doctool/post-references": "^0.0.1-dev.11",
+		"@doctool/printer-html": "^0.0.1-dev.11",
+		"@doctool/printer-weasyprint": "^0.0.1-dev.11"
 	}
 }

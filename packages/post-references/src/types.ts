@@ -6,7 +6,7 @@ export type Apa = {
 	url?: string,
 };
 
-export type ReferenceStyle = 'apa' | 'default';
+export type ReferenceStyle = 'apa' | 'default' | 'link';
 
 export type ReferenceMap<T = string | Apa> = {
 	style: ReferenceStyle,

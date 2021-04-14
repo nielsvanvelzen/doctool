@@ -9,7 +9,21 @@ const remarkFigures: Plugin = (options: any) => {
 		if (node.type !== 'image' || !node.title) return;
 
 		const children = [];
-		children.push({ type: 'html', value: '<figure>' });
+
+		// Move id attribute to the figure container
+		let id = null;
+		if (node.data?.hProperties?.id) {
+			id = node.data.hProperties.id;
+			delete node.data.hProperties.id;
+		} else if (node.data?.id) {
+			id = node.data.id;
+			delete node.data.id;
+		} else if (node.id) {
+			id = node.id;
+			delete node.id;
+		}
+		if (id) children.push({ type: 'html', value: `<figure id="${id}">` });
+		else children.push({ type: 'html', value: `<figure>` });
 		children.push(node);
 		children.push({ type: 'html', value: '<figcaption>' });
 		children.push({ type: 'text', value: node.title });

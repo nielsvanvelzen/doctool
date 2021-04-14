@@ -4,7 +4,7 @@ import remark from 'remark';
 import remarkGfm from 'remark-gfm';
 import remarkHighlight from 'remark-highlight.js';
 import remarkHtml from 'remark-html';
-import remarkHeadings from './remarkHeadings';
+import remarkAttributes from './remarkAttributes';
 import remarkReferences from './remarkReferences';
 
 export class RemarkContentProvider implements ContentProvider {
@@ -21,7 +21,7 @@ export class RemarkContentProvider implements ContentProvider {
 		processor.use(remarkHtml, {
 			sanitize: false
 		});
-		processor.use(remarkHeadings);
+		processor.use(remarkAttributes);
 		processor.use(remarkReferences);
 		const result = await processor.process(source);
 

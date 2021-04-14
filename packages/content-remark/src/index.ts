@@ -6,6 +6,7 @@ import remarkHighlight from 'remark-highlight.js';
 import remarkHtml from 'remark-html';
 import remarkAttributes from './remarkAttributes';
 import remarkReferences from './remarkReferences';
+import remarkFigures from './remarkFigures';
 
 export class RemarkContentProvider implements ContentProvider {
 	private readonly htmlContentProvider: HtmlContentProvider;
@@ -23,6 +24,7 @@ export class RemarkContentProvider implements ContentProvider {
 		});
 		processor.use(remarkAttributes);
 		processor.use(remarkReferences);
+		processor.use(remarkFigures);
 		const result = await processor.process(source);
 
 		return await this.htmlContentProvider.render(context, location, Buffer.from(String(result), 'utf-8'), data);

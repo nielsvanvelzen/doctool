@@ -28,7 +28,7 @@ export class LinkStyle implements CitationStyle<string> {
 		element.tagName = 'div';
 		element.childNodes = [];
 
-		for (const [id] of Object.entries(map.definitions)) {
+		for (const [id, label] of Object.entries(map.definitions)) {
 			const a = adapter.createElement('a', element.namespaceURI, []);
 			setAttribute(a, 'data-reference', id);
 			setAttribute(a, 'href', `#${id}`);
@@ -40,7 +40,7 @@ export class LinkStyle implements CitationStyle<string> {
 				setAttribute(el, 'data-reference', id);
 				setAttribute(el, 'href', `#${id}`);
 				setAttribute(el, 'class', `doctool-reference-link-${entry}`);
-				if (entry === 'label') createTextNode(el, id);
+				if (entry === 'label') el.childNodes.push(createTextNode(el, label));
 				a.childNodes.push(el);
 			}
 		}

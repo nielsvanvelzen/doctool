@@ -77,7 +77,19 @@ export class ReferencesPostProvider implements PostProvider {
 
 		visit(fragment, element => {
 			const id = getAttribute(element, 'id');
-			if (id?.startsWith(prefix)) definitions[id] = id;
+			if (id?.startsWith(prefix)) {
+				// Get caption from title attribute
+				let caption = getAttribute(element, 'title');
+
+				// No title -> get caption from figcaption element
+				if (!caption && element.tagName === 'figure')
+					visit(element, child => {
+						if (child.tagName === 'figcaption')
+							caption = getText(child);
+					});
+				
+				definitions[id] = caption ?? id;
+			}
 		});
 
 		return {

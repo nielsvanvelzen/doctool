@@ -10,8 +10,13 @@ export class HtmlPrinterProvider implements PrinterProvider {
 			endOfLine: 'auto'
 		};
 
-		const formatted = prettier.format(source.toString(), options);
-		return Buffer.from(formatted, 'utf-8');
+		try {
+			const formatted = prettier.format(source.toString(), options);
+			return Buffer.from(formatted, 'utf-8');
+		} catch (err) {
+			console.error(err);
+			return source;
+		}
 	}
 }
 

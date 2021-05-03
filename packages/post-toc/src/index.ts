@@ -26,6 +26,8 @@ export class TableOfContentsPostProvider implements PostProvider {
 		let currentEntry: TableOfContentsEntry | null = null;
 
 		const rewriter = new RewritingStream();
+		// Workaround for big documents (https://github.com/inikulin/parse5/issues/292)
+		(rewriter as any).tokenizer.preprocessor.bufferWaterline = Infinity;
 		const resultPromise: Promise<{ result: Buffer, toc: TableOfContentsEntry | null }> = new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
 
@@ -103,6 +105,8 @@ export class TableOfContentsPostProvider implements PostProvider {
 
 	async renderToc(source: Buffer, toc: TableOfContentsEntry, data: TableOfContentsPostProviderData): Promise<Buffer> {
 		const rewriter = new RewritingStream();
+		// Workaround for big documents (https://github.com/inikulin/parse5/issues/292)
+		(rewriter as any).tokenizer.preprocessor.bufferWaterline = Infinity;
 		const resultPromise: Promise<Buffer> = new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
 

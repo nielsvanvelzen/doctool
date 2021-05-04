@@ -7,6 +7,8 @@ const rewriteSrc = ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'sourc
 export class HtmlContentProvider implements ContentProvider {
 	async render<T extends object>(context: ContentRenderContext, location: string, source: Buffer, data: T): Promise<Buffer> {
 		const rewriter = new RewritingStream();
+		// Workaround for big documents (https://github.com/inikulin/parse5/issues/292)
+		(rewriter as any).tokenizer.preprocessor.bufferWaterline = Infinity;
 		const resultPromise: Promise<Buffer> = new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
 

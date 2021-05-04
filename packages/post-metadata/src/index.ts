@@ -32,6 +32,8 @@ export class MetadataPostProvider implements PostProvider {
 
 	async render(context: PostRenderContext, source: Buffer, data: MetadataPostProviderData): Promise<Buffer> {
 		const rewriter = new RewritingStream();
+		// Workaround for big documents (https://github.com/inikulin/parse5/issues/292)
+		(rewriter as any).tokenizer.preprocessor.bufferWaterline = Infinity;
 		const resultPromise: Promise<Buffer> = new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
 

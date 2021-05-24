@@ -1,5 +1,5 @@
 import { PluginValues, MediaProvider, MediaRenderContext } from '@doctool/plugin-api';
-import nomnoml from 'nomnoml';
+import * as nomnoml from 'nomnoml';
 
 export class NomnomlMediaProvider implements MediaProvider {
 	readonly defaultExtension = '.svg';

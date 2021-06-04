@@ -21,7 +21,13 @@ export class DefaultStyle implements CitationStyle<string> {
 		element.tagName = 'ul';
 		element.childNodes = [];
 
-		for (const [reference, description] of Object.entries(map.definitions)) {
+		const entries = Object.entries(map.definitions).sort((a, b) => {
+			if (a[0] < b[0]) return -1;
+			else if (a[0] > b[0]) return 1;
+			else return 0;
+		});
+		
+		for (const [reference, description] of entries) {
 			const li = adapter.createElement('li', element.namespaceURI, []);
 			setAttribute(li, 'id', getReferenceSlug(reference));
 			element.childNodes.push(li);

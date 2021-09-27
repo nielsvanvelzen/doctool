@@ -18,6 +18,6 @@
 		"remark-highlight.js": "^6.0.0",
 		"remark-html": "^13.0.1",
 		"unified": "^9.2.1",
-		"unist-util-visit": "^2.0.3"
+		"unist-util-visit": "^4.1.0"
 	}
 }

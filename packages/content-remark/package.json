@@ -14,7 +14,7 @@
 		"@doctool/content-html": "^0.0.1-dev.16",
 		"@doctool/plugin-api": "^0.0.1-dev.16",
 		"remark": "^13.0.0",
-		"remark-gfm": "^1.0.0",
+		"remark-gfm": "^3.0.0",
 		"remark-highlight.js": "^6.0.0",
 		"remark-html": "^13.0.1",
 		"unified": "^9.2.1",
